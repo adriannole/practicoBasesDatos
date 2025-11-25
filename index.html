@@ -286,6 +286,9 @@ li::before { content: "•"; color: var(--accent); font-size: 24px; position: ab
 table { width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; font-size: 16px; }
 th { background: rgba(56, 189, 248, 0.15); color: #fff; padding: 15px; text-align: left; }
 td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: top; }
+/* Tabla con efecto hover suave */
+.hover-table tbody tr { transition: background 0.2s ease; }
+.hover-table tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
 
 /* Navegación */
 .nav-controls { position: absolute; bottom: 40px; right: 60px; z-index: 100; display: flex; gap: 15px; }
@@ -803,17 +806,17 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
     }
     
     /* Ajustes para Slide 19 (Gracias) */
-    #slide-19 h1 {
+    #slide-20 h1 {
         font-size: 48px !important;
         margin-bottom: 20px !important;
     }
     
-    #slide-19 p {
+    #slide-20 p {
         font-size: 18px !important;
         margin-bottom: 15px !important;
     }
     
-    #slide-19 button {
+    #slide-20 button {
         padding: 12px 30px !important;
         font-size: 16px !important;
         margin-top: 25px !important;
@@ -951,18 +954,18 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
     }
     
     /* Slide 19 (Gracias) en móviles pequeños */
-    #slide-19 h1 {
+    #slide-20 h1 {
         font-size: 40px !important;
         margin-bottom: 15px !important;
         line-height: 1.2 !important;
     }
     
-    #slide-19 p {
+    #slide-20 p {
         font-size: 16px !important;
         margin-bottom: 12px !important;
     }
     
-    #slide-19 button {
+    #slide-20 button {
         padding: 10px 25px !important;
         font-size: 14px !important;
         margin-top: 20px !important;
@@ -1058,17 +1061,17 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
     }
     
     /* Slide 19 (Gracias) en landscape */
-    #slide-19 h1 {
+    #slide-20 h1 {
         font-size: 44px !important;
         margin-bottom: 15px !important;
     }
     
-    #slide-19 p {
+    #slide-20 p {
         font-size: 16px !important;
         margin-bottom: 10px !important;
     }
     
-    #slide-19 button {
+    #slide-20 button {
         padding: 10px 25px !important;
         font-size: 15px !important;
         margin-top: 20px !important;
@@ -1100,7 +1103,7 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
         <button class="nav-btn" onclick="prevSlide()" title="Anterior"><i class="fas fa-chevron-left"></i></button>
         <button class="nav-btn" onclick="nextSlide()" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
     </div>
-    <div class="slide-counter" id="slide-counter">01 / 19</div>
+    <div class="slide-counter" id="slide-counter">01 / 20</div>
 
     <!-- SLIDE 1: Título -->
     <div class="slide active" id="slide-1">
@@ -1819,8 +1822,45 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
         </div>
     </div>
 
-    <!-- SLIDE 16: Comparativa Específica (ACTUALIZADO CON IMÁGENES) -->
+    <!-- SLIDE 16: Casos de Uso por Motor (NUEVO) -->
     <div class="slide" id="slide-16">
+        <h2 class="slide-title animate-in">Casos de Uso por Motor</h2>
+        <div class="content-area">
+            <div class="card animate-in d1">
+                <h3><i class="fas fa-list"></i> Guía de Selección</h3>
+                <p style="font-size: 14px; color: #94a3b8; margin-top: 6px;">Elige el motor según el escenario de tu proyecto.</p>
+                <table class="hover-table" style="font-size: 14px; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Motor</th>
+                            <th>Caso de Uso Ideal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Redis Search</strong></td>
+                            <td>Búsqueda en tiempo real sobre caché, <span style="color:#4ade80; font-weight:600;">baja latencia</span>, geo‑búsquedas, autocompletado.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Valkey Search</strong></td>
+                            <td><span style="color:#4ade80; font-weight:700;">Búsqueda semántica de vectores</span>, RAG para LLMs, análisis de similitud a escala con requisitos de <span style="color:#38bdf8; font-weight:600;">open source</span>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Elasticsearch</strong></td>
+                            <td>Logs, análisis de seguridad (SIEM), búsqueda <em>full‑text</em> a gran escala, e‑commerce, observabilidad.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OpenSearch</strong></td>
+                            <td>Igual que Elasticsearch con licencia <span style="color:#4ade80; font-weight:600;">Apache 2.0</span>; SIEM, análisis de logs, búsquedas híbridas texto/vectores.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 17: Comparativa Específica (ACTUALIZADO CON IMÁGENES) -->
+    <div class="slide" id="slide-17">
         <h2 class="slide-title animate-in">Valkey vs Milvus</h2>
         <div class="content-area two-column">
             <div class="card animate-in d1">
@@ -1850,8 +1890,8 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
         </div>
     </div>
 
-    <!-- SLIDE 17: Móviles -->
-    <div class="slide" id="slide-17">
+    <!-- SLIDE 18: Móviles -->
+    <div class="slide" id="slide-18">
         <h2 class="slide-title animate-in">Bases de Datos Móviles</h2>
         <div class="content-area two-column">
             <div class="animate-in d1">
@@ -1871,8 +1911,8 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
         </div>
     </div>
 
-    <!-- SLIDE 18: Conclusiones -->
-    <div class="slide" id="slide-18">
+    <!-- SLIDE 19: Conclusiones -->
+    <div class="slide" id="slide-19">
         <h2 class="slide-title animate-in">Conclusiones Finales</h2>
         <div class="content-area three-column">
             <div class="card animate-in d1">
@@ -1890,8 +1930,8 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
         </div>
     </div>
 
-    <!-- SLIDE 19: Despedida -->
-    <div class="slide" id="slide-19">
+    <!-- SLIDE 20: Despedida -->
+    <div class="slide" id="slide-20">
         <div class="content-area" style="text-align: center; align-items: center;">
             <h1 class="animate-in" style="font-size: 100px;">¡Gracias!</h1>
             <p class="animate-in d1" style="font-size: 24px;">¿Preguntas?</p>
@@ -1906,7 +1946,7 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
 <script>
     // --- 1. SISTEMA DE DIAPOSITIVAS ---
     let currentSlide = 1;
-    const totalSlides = 19;
+    const totalSlides = 20;
     const slides = document.querySelectorAll('.slide');
     const counter = document.getElementById('slide-counter');
 
