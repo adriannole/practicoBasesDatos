@@ -589,9 +589,23 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
     
     /* Navegación móvil */
     .nav-controls {
-        bottom: 20px;
-        right: 20px;
+        position: fixed;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+        z-index: 1000;
         gap: 10px;
+        pointer-events: none; /* permite clic solo en los botones */
+    }
+    
+    .nav-controls .nav-btn {
+        pointer-events: auto;
     }
     
     .nav-btn {
@@ -995,6 +1009,24 @@ td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); ver
     .two-column, .three-column, .grid-2x2 {
         gap: 15px;
     }
+    
+    /* Flechas centradas en landscape */
+    .nav-controls {
+        position: fixed;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        z-index: 1000;
+        gap: 10px;
+        pointer-events: none;
+    }
+    .nav-controls .nav-btn { pointer-events: auto; }
     
     /* Modal de zoom en landscape */
     .image-modal {
