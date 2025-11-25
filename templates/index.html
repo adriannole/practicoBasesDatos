@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparación de Bases de Datos - SQL vs NoSQL</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 40px 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1a202c;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #1a202c;
+            font-weight: 700;
+            font-size: 32px;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .btn-custom {
+            background: #2d3748;
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 6px;
+            margin: 5px;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+        
+        .btn-custom:hover {
+            background: #1a202c;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn-custom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .chart-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .results-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #2d3748;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: left;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .results-card.sql-card {
+            border-left-color: #3182ce;
+        }
+        
+        .results-card.nosql-card {
+            border-left-color: #38a169;
+        }
+        
+        .results-card h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .results-card p {
+            margin: 8px 0;
+            font-size: 15px;
+            color: #4a5568;
+        }
+        
+        .results-card .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-right: 8px;
+        }
+        
+        .results-card .metric-label {
+            font-size: 13px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .spinner-border {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border-width: 2px;
+        }
+        
+        .info-box {
+            background: #f7fafc;
+            border: 1px solid #cbd5e0;
+            border-left: 3px solid #4299e1;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h5 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .badge-custom {
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: 500;
+            background: #edf2f7;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 24px;
+            letter-spacing: -0.3px;
+        }
+        
+        .btn-group .btn {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #cbd5e0;
+            font-size: 14px;
+            padding: 8px 16px;
+            font-weight: 500;
+        }
+        
+        .btn-group .btn:hover {
+            background: #f7fafc;
+            border-color: #a0aec0;
+        }
+        
+        .btn-group .btn.active {
+            background: #2d3748;
+            color: white;
+            border-color: #2d3748;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        .accordion-button {
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background: #f7fafc;
+            color: #1a202c;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <!-- ENCABEZADO -->
+        <div class="header">
+            <h1>Análisis Comparativo de Rendimiento</h1>
+            <p class="subtitle">Evaluación de PostgreSQL (SQL) vs MongoDB (NoSQL)</p>
+            <div class="mt-3">
+                <span class="badge-custom">50,000 Registros</span>
+                <span class="badge-custom">50 Conexiones Concurrentes</span>
+                <span class="badge-custom">Benchmark en Tiempo Real</span>
+            </div>
+        </div>
+
+        <!-- INFO EDUCATIVA -->
+        <div class="info-box">
+            <h5>Descripción del Sistema</h5>
+            <p class="mb-0">
+                Esta aplicación ejecuta pruebas de rendimiento comparativas entre bases de datos relacionales (PostgreSQL) 
+                y no relacionales (MongoDB). Se evalúan dos escenarios principales: <strong>escritura masiva</strong> 
+                (inserción concurrente de datos) y <strong>operaciones de consulta</strong> (búsquedas con diferentes 
+                niveles de complejidad). Los resultados se presentan mediante visualizaciones gráficas para facilitar 
+                el análisis de desempeño.
+            </p>
+        </div>
+
+        <!-- BOTONES DE CONTROL -->
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <button id="btnEscritura" class="btn btn-custom w-100" onclick="ejecutarBenchmarkEscritura()">
+                    Ejecutar Prueba de Escritura
+                </button>
+                <div class="spinner-border text-dark mt-3" id="spinnerEscritura" role="status" style="display: block; margin: 0 auto;">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <button id="btnBusqueda" class="btn btn-custom w-100" onclick="ejecutarBenchmarkBusqueda()">
+                    Ejecutar Prueba de Consulta
+                </button>
+                <div class="spinner-border text-dark mt-3" id="spinnerBusqueda" role="status" style="display: block; margin: 0 auto;">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS DE ESCRITURA -->
+        <div id="resultadosEscritura" style="display: none;">
+            <h3 class="section-title">Resultados de Prueba de Escritura</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="results-card sql-card">
+                        <h3>PostgreSQL (SQL)</h3>
+                        <div class="mt-3">
+                            <div class="mb-3">
+                                <span class="metric-value" id="tiempoSQLVal">--</span>
+                                <span class="metric-label">segundos</span>
+                            </div>
+                            <div>
+                                <span class="metric-value" id="velocidadSQLVal">--</span>
+                                <span class="metric-label">reg/s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="results-card nosql-card">
+                        <h3>MongoDB (NoSQL)</h3>
+                        <div class="mt-3">
+                            <div class="mb-3">
+                                <span class="metric-value" id="tiempoMongoVal">--</span>
+                                <span class="metric-label">segundos</span>
+                            </div>
+                            <div>
+                                <span class="metric-value" id="velocidadMongoVal">--</span>
+                                <span class="metric-label">reg/s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GRÁFICA DE ESCRITURA -->
+            <div class="chart-container mt-4">
+                <h4 class="mb-4" style="font-size: 18px; font-weight: 600; color: #2d3748;">Comparación de Tiempos de Escritura</h4>
+                <canvas id="chartEscritura" height="80"></canvas>
+            </div>
+        </div>
+
+        <!-- RESULTADOS DE BÚSQUEDA -->
+        <div id="resultadosBusqueda" style="display: none;">
+            <h3 class="section-title">Resultados de Prueba de Consulta</h3>
+            
+            <!-- Selector de tipo de búsqueda -->
+            <div class="mb-4">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn" onclick="ejecutarTipoBusqueda('simple')">
+                        Consulta Simple
+                    </button>
+                    <button type="button" class="btn" onclick="ejecutarTipoBusqueda('rango')">
+                        Consulta con Rangos
+                    </button>
+                    <button type="button" class="btn" onclick="ejecutarTipoBusqueda('agregacion')">
+                        Operación de Agregación
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="results-card sql-card">
+                        <h3>PostgreSQL</h3>
+                        <div class="mt-3">
+                            <div class="mb-3">
+                                <span class="metric-value" id="tiempoBusquedaSQLVal">--</span>
+                                <span class="metric-label">milisegundos</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Registros encontrados: </span>
+                                <span class="metric-value" style="font-size: 18px;" id="registrosSQLVal">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="results-card nosql-card">
+                        <h3>MongoDB</h3>
+                        <div class="mt-3">
+                            <div class="mb-3">
+                                <span class="metric-value" id="tiempoBusquedaMongoVal">--</span>
+                                <span class="metric-label">milisegundos</span>
+                            </div>
+                            <div>
+                                <span class="metric-label">Registros encontrados: </span>
+                                <span class="metric-value" style="font-size: 18px;" id="registrosMongoVal">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GRÁFICA DE BÚSQUEDA -->
+            <div class="chart-container mt-4">
+                <h4 class="mb-4" style="font-size: 18px; font-weight: 600; color: #2d3748;">Comparación de Tiempos de Consulta</h4>
+                <canvas id="chartBusqueda" height="80"></canvas>
+            </div>
+        </div>
+
+        <!-- EXPLICACIÓN TÉCNICA -->
+        <div class="mt-5">
+            <div class="accordion" id="accordionExplicacion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExplicacion">
+                            Documentación Técnica
+                        </button>
+                    </h2>
+                    <div id="collapseExplicacion" class="accordion-collapse collapse" data-bs-parent="#accordionExplicacion">
+                        <div class="accordion-body">
+                            <h5>Arquitectura del Sistema</h5>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Backend (Flask):</strong> Servidor Python que ejecuta las pruebas de rendimiento y proporciona API REST con respuestas en formato JSON</li>
+                                <li><strong>Threading:</strong> Implementa 10 hilos concurrentes para simular escenarios de carga real en producción</li>
+                                <li><strong>PostgreSQL:</strong> Operaciones con garantías ACID, validación de integridad referencial mediante claves foráneas</li>
+                                <li><strong>MongoDB:</strong> Almacenamiento de documentos JSON desnormalizados para optimizar lecturas</li>
+                                <li><strong>Medición de Rendimiento:</strong> Utiliza <code>time.time()</code> para cronometraje con precisión de milisegundos</li>
+                                <li><strong>Visualización:</strong> Chart.js para renderizado de gráficas interactivas en tiempo real</li>
+                            </ul>
+                            
+                            <h5 class="mt-4">Tipos de Operaciones de Consulta</h5>
+                            <ul style="line-height: 1.8;">
+                                <li><strong>Consulta Simple:</strong> Filtrado básico (WHERE temperatura > 25) limitado a 100 registros</li>
+                                <li><strong>Consulta con Rangos:</strong> Condiciones múltiples con operadores lógicos AND y BETWEEN</li>
+                                <li><strong>Operación de Agregación:</strong> Funciones de agregación (AVG, MAX, MIN) sobre el conjunto completo de datos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Variables globales para las gráficas
+        let chartEscritura = null;
+        let chartBusqueda = null;
+        
+        // ============================================================
+        // FUNCIÓN: EJECUTAR BENCHMARK DE ESCRITURA
+        // ============================================================
+        async function ejecutarBenchmarkEscritura() {
+            // Mostrar spinner y deshabilitar botón
+            document.getElementById('spinnerEscritura').style.display = 'inline-block';
+            document.getElementById('btnEscritura').disabled = true;
+            
+            try {
+                // Llamada al backend
+                const response = await fetch('/api/benchmark', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    mostrarResultadosEscritura(resultado.data);
+                } else {
+                    alert('Error: ' + resultado.error);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error);
+            } finally {
+                // Ocultar spinner y habilitar botón
+                document.getElementById('spinnerEscritura').style.display = 'none';
+                document.getElementById('btnEscritura').disabled = false;
+            }
+        }
+        
+        // ============================================================
+        // FUNCIÓN: MOSTRAR RESULTADOS DE ESCRITURA
+        // ============================================================
+        function mostrarResultadosEscritura(data) {
+            // Mostrar sección de resultados
+            document.getElementById('resultadosEscritura').style.display = 'block';
+            
+            // Calcular velocidades
+            const velocidadSQL = (data.registros / data.sql).toFixed(2);
+            const velocidadMongo = (data.registros / data.mongo).toFixed(2);
+            
+            // Actualizar textos
+            document.getElementById('tiempoSQLVal').textContent = data.sql.toFixed(3);
+            document.getElementById('velocidadSQLVal').textContent = velocidadSQL;
+            document.getElementById('tiempoMongoVal').textContent = data.mongo.toFixed(3);
+            document.getElementById('velocidadMongoVal').textContent = velocidadMongo;
+            
+            // Crear/actualizar gráfica
+            const ctx = document.getElementById('chartEscritura').getContext('2d');
+            
+            if (chartEscritura) {
+                chartEscritura.destroy();
+            }
+            
+            chartEscritura = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PostgreSQL (SQL)', 'MongoDB (NoSQL)'],
+                    datasets: [{
+                        label: 'Tiempo de Escritura (segundos)',
+                        data: [data.sql, data.mongo],
+                        backgroundColor: [
+                            'rgba(49, 130, 206, 0.8)',
+                            'rgba(56, 161, 105, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(49, 130, 206, 1)',
+                            'rgba(56, 161, 105, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toFixed(3) + ' segundos';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo (segundos)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Scroll hacia resultados
+            document.getElementById('resultadosEscritura').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // ============================================================
+        // FUNCIÓN: EJECUTAR BENCHMARK DE BÚSQUEDA
+        // ============================================================
+        async function ejecutarBenchmarkBusqueda() {
+            document.getElementById('resultadosBusqueda').style.display = 'block';
+            document.getElementById('resultadosBusqueda').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // ============================================================
+        // FUNCIÓN: EJECUTAR TIPO DE BÚSQUEDA ESPECÍFICO
+        // ============================================================
+        async function ejecutarTipoBusqueda(tipo) {
+            document.getElementById('spinnerBusqueda').style.display = 'inline-block';
+            
+            try {
+                const response = await fetch('/api/busqueda', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tipo: tipo })
+                });
+                
+                const resultado = await response.json();
+                
+                if (resultado.success) {
+                    mostrarResultadosBusqueda(resultado.data);
+                } else {
+                    alert('Error: ' + resultado.error);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error);
+            } finally {
+                document.getElementById('spinnerBusqueda').style.display = 'none';
+            }
+        }
+        
+        // ============================================================
+        // FUNCIÓN: MOSTRAR RESULTADOS DE BÚSQUEDA
+        // ============================================================
+        function mostrarResultadosBusqueda(data) {
+            // Convertir a milisegundos
+            const tiempoSQLms = (data.sql.tiempo * 1000).toFixed(2);
+            const tiempoMongoMs = (data.mongo.tiempo * 1000).toFixed(2);
+            
+            // Actualizar textos
+            document.getElementById('tiempoBusquedaSQLVal').textContent = tiempoSQLms;
+            document.getElementById('registrosSQLVal').textContent = data.sql.registros;
+            document.getElementById('tiempoBusquedaMongoVal').textContent = tiempoMongoMs;
+            document.getElementById('registrosMongoVal').textContent = data.mongo.registros;
+            
+            // Crear/actualizar gráfica
+            const ctx = document.getElementById('chartBusqueda').getContext('2d');
+            
+            if (chartBusqueda) {
+                chartBusqueda.destroy();
+            }
+            
+            chartBusqueda = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PostgreSQL', 'MongoDB'],
+                    datasets: [{
+                        label: 'Tiempo de Consulta (milisegundos)',
+                        data: [tiempoSQLms, tiempoMongoMs],
+                        backgroundColor: [
+                            'rgba(49, 130, 206, 0.8)',
+                            'rgba(56, 161, 105, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(49, 130, 206, 1)',
+                            'rgba(56, 161, 105, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: `Tipo de búsqueda: ${data.tipo.toUpperCase()}`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo (ms)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
