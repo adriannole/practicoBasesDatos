@@ -14,8 +14,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 # Configuración de pruebas
-NUM_REGISTROS = 50000  # Total de registros a insertar
-NUM_HILOS = 50        # Hilos simultáneos (simula concurrencia)
+NUM_REGISTROS = 5000  # Total de registros a insertar
+NUM_HILOS = 10        # Hilos simultáneos (simula concurrencia)
 
 # ============================================================
 # 2. CONEXIÓN A BASES DE DATOS
