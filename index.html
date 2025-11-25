@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas de Bases de Datos - Master Class</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+/* --- 1. ESTILOS NUCLEARES --- */
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.95);
+    --accent: #38bdf8;
+    --accent-gradient: linear-gradient(to right, #38bdf8, #818cf8);
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Canvas de Fondo */
+#bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.4; }
+#confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+
+/* Contenedor Principal */
+.presentation-container {
+    width: 1400px;
+    height: 800px;
+    position: relative;
+    z-index: 10;
+    perspective: 1000px;
+}
+
+/* --- 2. DIAPOSITIVAS --- */
+.slide {
+    background-color: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 50px 60px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95) translateY(30px);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    visibility: hidden;
+}
+
+.slide.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1) translateY(0);
+    visibility: visible;
+    z-index: 2;
+}
+
+/* --- 3. TIPOGRAFÍA --- */
+h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; line-height: 1.1; color: white; }
+
+h1 {
+    font-size: 90px; font-weight: 700; margin-bottom: 20px;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.slide-title {
+    font-size: 42px; font-weight: 700; margin-bottom: 25px; color: #e2e8f0;
+    border-left: 8px solid var(--accent); padding-left: 25px;
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+}
+
+h3 { font-size: 24px; color: var(--accent); margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+h4 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+
+p, li, td { font-size: 18px; line-height: 1.6; color: var(--text-muted); }
+strong { color: #fff; font-weight: 600; }
+
+ul { list-style: none; padding: 0; }
+li { margin-bottom: 10px; padding-left: 20px; position: relative; }
+li::before { content: "•"; color: var(--accent); font-size: 24px; position: absolute; left: 0; top: -4px; }
+
+/* --- 4. LAYOUTS & GRID --- */
+.content-area { display: flex; flex-direction: column; flex-grow: 1; justify-content: center; width: 100%; height: 100%; }
+.two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%; align-items: start; }
+.three-column { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; width: 100%; }
+.grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 25px; }
+
+/* --- 5. COMPONENTES VISUALES --- */
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 25px;
+    border-radius: 16px;
+    height: 100%;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+.card:hover { transform: translateY(-5px); border-color: var(--accent); background: rgba(255, 255, 255, 0.05); }
+
+.info-box {
+    background: rgba(56, 189, 248, 0.1);
+    border-left: 4px solid var(--accent);
+    padding: 15px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 15px;
+    font-size: 16px;
+}
+
+/* Contenedor de Imagen Placeholder - MEJORADO PARA TARJETAS */
+.image-placeholder {
+    width: 100%; height: 100%; min-height: 300px;
+    background-color: #020617;
+    border: 2px dashed #334155;
+    border-radius: 16px;
+    display: flex; justify-content: center; align-items: center;
+    position: relative; overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+.image-placeholder:hover {
+    transform: scale(1.02);
+}
+.image-placeholder img {
+    width: 100%; height: 100%; object-fit: contain;
+    position: absolute; top: 0; left: 0;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+.image-placeholder:hover img {
+    transform: scale(1.05);
+}
+.card-img-top {
+    width: 100%;
+    height: 180px; /* Altura fija para el cuadro de imagen en tarjetas */
+    background-color: #0f172a;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+.card-img-top:hover {
+    transform: scale(1.02);
+}
+.card-img-top img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* La magia: ajusta la imagen sin cortarla */
+    padding: 10px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+.card-img-top:hover img {
+    transform: scale(1.1);
+}
+
+/* Modal de Zoom */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    animation: fadeIn 0.3s ease;
+}
+
+.image-modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    animation: zoomIn 0.3s ease;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 30px;
+    right: 50px;
+    color: white;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.image-modal-close:hover {
+    transform: scale(1.2);
+    color: var(--accent);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Visualizaciones con zoom */
+.zoomable-visualization {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.zoomable-visualization:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.zoomable-visualization::after {
+    content: '🔍';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.zoomable-visualization:hover::after {
+    opacity: 0.7;
+}
+
+/* --- NUEVO: Estilos para Iconos de Timeline (Slide 3) --- */
+.timeline-icon-box {
+    width: 80px; height: 80px;
+    background: rgba(56, 189, 248, 0.1);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    margin: 0 auto 20px auto; /* Centrado y margen inferior */
+    font-size: 32px; color: var(--accent);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    animation: float 4s ease-in-out infinite; /* Animación flotante */
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); } /* Sube un poco */
+    100% { transform: translateY(0px); }
+}
+
+.placeholder-text {
+    color: #475569; font-family: monospace; text-align: center; padding: 20px;
+    pointer-events: none;
+}
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; font-size: 16px; }
+th { background: rgba(56, 189, 248, 0.15); color: #fff; padding: 15px; text-align: left; }
+td { padding: 12px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: top; }
+
+/* Navegación */
+.nav-controls { position: absolute; bottom: 40px; right: 60px; z-index: 100; display: flex; gap: 15px; }
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover { background: var(--accent); color: #0f172a; transform: scale(1.1); }
+.slide-counter { position: absolute; bottom: 40px; left: 60px; color: rgba(255, 255, 255, 0.3); font-family: 'Space Grotesk'; font-size: 18px; }
+
+/* Zoom Modal */
+.zoom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    cursor: zoom-out;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.zoom-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.zoom-content {
+    max-width: 90%;
+    max-height: 90%;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.zoom-overlay.active .zoom-content {
+    transform: scale(1);
+}
+
+.zoomable {
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+}
+
+.zoomable:hover {
+    transform: scale(1.02);
+}
+
+/* Animaciones */
+.animate-in { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.active .animate-in { opacity: 1; transform: translateY(0); }
+.d1 { transition-delay: 0.1s; } .d2 { transition-delay: 0.2s; } .d3 { transition-delay: 0.3s; }
+
+/* Animaciones de Escalabilidad */
+@keyframes growVertical {
+    0% { width: 30%; background: linear-gradient(to right, #4ade80, #fbbf24); }
+    50% { width: 85%; background: linear-gradient(to right, #fbbf24, #f87171); }
+    100% { width: 30%; background: linear-gradient(to right, #4ade80, #fbbf24); }
+}
+
+@keyframes fadeInScale {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Animaciones del Slide de Título */
+@keyframes glowPulse {
+    0%, 100% { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+    50% { text-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 0 30px rgba(56, 189, 248, 0.6); }
+}
+
+@keyframes expandLine {
+    0% { width: 0; opacity: 0; }
+    100% { width: 120px; opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes buttonPulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.6); transform: scale(1); }
+    50% { box-shadow: 0 0 50px rgba(56, 189, 248, 0.9), 0 0 70px rgba(129, 140, 248, 0.5); transform: scale(1.05); }
+}
+
+.cursor-blink {
+    animation: blink 1s step-end infinite;
+    color: var(--accent);
+    font-weight: 100;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.tech-icon-box {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+.tech-icon-box:hover {
+    transform: translateY(-10px) scale(1.1);
+    background: rgba(56, 189, 248, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+}
+
+.tech-icon-box:nth-child(1) { animation-delay: 0s; }
+.tech-icon-box:nth-child(2) { animation-delay: 0.2s; }
+.tech-icon-box:nth-child(3) { animation-delay: 0.4s; }
+.tech-icon-box:nth-child(4) { animation-delay: 0.6s; }
+.tech-icon-box:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablets (1024px y menos) */
+@media screen and (max-width: 1024px) {
+    .presentation-container {
+        width: 95vw;
+        height: 90vh;
+    }
+    
+    .slide {
+        padding: 30px 40px;
+    }
+    
+    h1 {
+        font-size: 60px;
+    }
+    
+    .slide-title {
+        font-size: 32px;
+    }
+    
+    h3 {
+        font-size: 20px;
+    }
+    
+    p, li, td {
+        font-size: 16px;
+    }
+    
+    .two-column, .three-column, .grid-2x2 {
+        gap: 20px;
+    }
+}
+
+/* Móviles (768px y menos) */
+@media screen and (max-width: 768px) {
+    body {
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .presentation-container {
+        width: 100%;
+        height: 100vh;
+        max-width: 100vw;
+        perspective: none;
+        overflow: hidden;
+    }
+    
+    .slide {
+        padding: 20px 20px 80px 20px;
+        border-radius: 0;
+        min-height: 100vh;
+        max-height: 100vh;
+        height: 100vh;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transform: none !important;
+        box-shadow: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    .slide:not(.active) {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+    
+    .slide.active {
+        opacity: 1;
+        pointer-events: all;
+        visibility: visible;
+        z-index: 2;
+    }
+    
+    h1 {
+        font-size: 40px;
+        line-height: 1.2;
+    }
+    
+    .slide-title {
+        font-size: 26px;
+        padding-left: 15px;
+        border-left-width: 5px;
+        margin-bottom: 20px;
+    }
+    
+    h3 {
+        font-size: 18px;
+    }
+    
+    h4 {
+        font-size: 14px;
+    }
+    
+    p, li, td {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* Layouts en columna única */
+    .two-column, .three-column, .grid-2x2 {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 15px;
+        height: auto;
+        align-items: stretch;
+    }
+    
+    .content-area {
+        height: auto;
+        min-height: auto;
+        justify-content: flex-start;
+        gap: 15px;
+        flex-grow: 0;
+    }
+    
+    /* Tarjetas */
+    .card {
+        padding: 20px;
+        height: auto;
+        min-height: auto;
+        margin-bottom: 0;
+    }
+    
+    /* Imágenes y canvas */
+    .image-placeholder, .card-img-top {
+        min-height: 250px;
+        height: 250px;
+        max-height: 250px;
+        width: 100%;
+    }
+    
+    .image-wrapper {
+        height: auto !important;
+        min-height: 250px !important;
+        max-height: 300px !important;
+        width: 100%;
+        margin: 15px 0;
+    }
+    
+    canvas {
+        max-height: 300px !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+    
+    .image-wrapper canvas {
+        max-height: 300px !important;
+        width: 100% !important;
+        height: 300px !important;
+    }
+    
+    /* Navegación móvil */
+    .nav-controls {
+        bottom: 20px;
+        right: 20px;
+        gap: 10px;
+    }
+    
+    .nav-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .slide-counter {
+        bottom: 20px;
+        left: 20px;
+        font-size: 14px;
+    }
+    
+    /* Timeline icons */
+    .timeline-icon-box {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    /* Tech icons (slide 1) */
+    .tech-icon-box {
+        width: 70px;
+        height: 70px;
+        padding: 10px;
+    }
+    
+    .tech-icon-box i {
+        font-size: 28px !important;
+    }
+    
+    .tech-icons {
+        gap: 15px !important;
+    }
+    
+    /* Tablas responsive */
+    table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    th, td {
+        padding: 8px;
+        min-width: 80px;
+        white-space: nowrap;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tbody {
+        display: table-row-group;
+    }
+    
+    /* Info boxes */
+    .info-box {
+        font-size: 14px;
+        padding: 12px;
+        margin-top: 10px;
+    }
+    
+    /* Eliminar espacios vacíos */
+    ul {
+        margin: 10px 0;
+    }
+    
+    li {
+        margin-bottom: 8px;
+    }
+    
+    h3 {
+        margin-bottom: 10px;
+        margin-top: 5px;
+    }
+    
+    h4 {
+        margin-bottom: 8px;
+    }
+    
+    p {
+        margin-bottom: 10px;
+    }
+    
+    /* Ajustar slide 1 (título) */
+    #slide-1 .content-area {
+        padding: 20px 0;
+        justify-content: center !important;
+    }
+    
+    #slide-1 h1 {
+        font-size: 36px !important;
+        margin-bottom: 15px;
+    }
+    
+    #slide-1 p {
+        font-size: 14px !important;
+        margin-bottom: 15px;
+    }
+    
+    #slide-1 .tech-icons {
+        margin: 20px 0 !important;
+        gap: 15px !important;
+    }
+    
+    /* Ajustes para Slide 12 (Big Data y Nube) */
+    #slide-12 .zoomable-visualization > div {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+    
+    #slide-12 .zoomable-visualization {
+        padding: 10px !important;
+        margin-top: 10px !important;
+    }
+    
+    #slide-12 .zoomable-visualization > div > div {
+        width: 100%;
+    }
+    
+    /* Reducir tamaño de celdas columnares */
+    #slide-12 .zoomable-visualization div[style*="width: 50px"] {
+        width: 35px !important;
+        height: 28px !important;
+        font-size: 10px !important;
+    }
+    
+    #slide-12 .zoomable-visualization div[style*="width: 45px"] {
+        width: 32px !important;
+        height: 28px !important;
+        font-size: 10px !important;
+    }
+    
+    #slide-12 .zoomable-visualization p {
+        font-size: 11px !important;
+        margin-top: 10px !important;
+    }
+    
+    /* Ajustar arquitectura cloud */
+    #slide-12 .zoomable-visualization div[style*="width: 60px"] {
+        width: 50px !important;
+        padding: 6px !important;
+    }
+    
+    #slide-12 .zoomable-visualization div[style*="font-size: 10px"] {
+        font-size: 9px !important;
+    }
+    
+    #slide-12 .zoomable-visualization div[style*="font-size: 8px"] {
+        font-size: 7px !important;
+    }
+    
+    /* Modal de zoom */
+    .zoom-content, #modalImage {
+        max-width: 95% !important;
+        max-height: 85% !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+    
+    .image-modal {
+        padding: 20px;
+    }
+    
+    .image-modal img {
+        max-width: 95% !important;
+        max-height: 85% !important;
+        width: auto !important;
+        height: auto !important;
+    }
+    
+    .image-modal-close {
+        top: 10px;
+        right: 15px;
+        font-size: 35px;
+        z-index: 10000;
+    }
+    
+    /* Ajustar clones de zoom en móviles */
+    #zoomClone {
+        max-width: 95% !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        transform: scale(1.1) !important;
+    }
+    
+    #zoomClone * {
+        max-width: 100% !important;
+    }
+    
+    /* Ajustes para Slide 19 (Gracias) */
+    #slide-19 h1 {
+        font-size: 48px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    #slide-19 p {
+        font-size: 18px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    #slide-19 button {
+        padding: 12px 30px !important;
+        font-size: 16px !important;
+        margin-top: 25px !important;
+    }
+}
+
+/* Móviles pequeños (480px y menos) */
+@media screen and (max-width: 480px) {
+    .slide {
+        padding: 15px 15px 70px 15px;
+        min-height: 100vh;
+        max-height: 100vh;
+        height: 100vh;
+    }
+    
+    h1 {
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+    
+    .slide-title {
+        font-size: 20px;
+        padding-left: 12px;
+        margin-bottom: 15px;
+    }
+    
+    h3 {
+        font-size: 16px;
+    }
+    
+    p, li, td {
+        font-size: 13px;
+    }
+    
+    .card {
+        padding: 15px;
+    }
+    
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .slide-counter {
+        font-size: 12px;
+    }
+    
+    .tech-icon-box {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .tech-icon-box i {
+        font-size: 24px !important;
+    }
+    
+    .timeline-icon-box {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    canvas {
+        max-height: 220px !important;
+        width: 100% !important;
+    }
+    
+    .image-wrapper {
+        max-height: 220px !important;
+        min-height: 200px !important;
+    }
+    
+    .image-wrapper canvas {
+        max-height: 220px !important;
+        height: 220px !important;
+    }
+    
+    .image-placeholder, .card-img-top {
+        min-height: 200px;
+        height: 200px;
+        max-height: 200px;
+    }
+    
+    /* Slide 12 en móviles pequeños */
+    #slide-12 .zoomable-visualization div[style*="width: 50px"],
+    #slide-12 .zoomable-visualization div[style*="width: 45px"],
+    #slide-12 .zoomable-visualization div[style*="width: 35px"],
+    #slide-12 .zoomable-visualization div[style*="width: 32px"] {
+        width: 28px !important;
+        height: 24px !important;
+        font-size: 9px !important;
+    }
+    
+    #slide-12 .zoomable-visualization div[style*="gap: 6px"] {
+        gap: 4px !important;
+    }
+    
+    #slide-12 .zoomable-visualization div[style*="gap: 8px"] {
+        gap: 5px !important;
+    }
+    
+    /* Modal de zoom en móviles pequeños */
+    .image-modal {
+        padding: 15px;
+    }
+    
+    .zoom-content, #modalImage, .image-modal img {
+        max-width: 92% !important;
+        max-height: 80% !important;
+    }
+    
+    .image-modal-close {
+        top: 5px !important;
+        right: 10px !important;
+        font-size: 30px !important;
+    }
+    
+    /* Ajustar clones de zoom en móviles pequeños */
+    #zoomClone {
+        max-width: 92% !important;
+        max-height: 75vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        transform: scale(1) !important;
+    }
+    
+    #zoomClone * {
+        max-width: 100% !important;
+    }
+    
+    #zoomClone div[style*="display: grid"],
+    #zoomClone div[style*="display: flex"] {
+        width: 100% !important;
+    }
+    
+    /* Slide 19 (Gracias) en móviles pequeños */
+    #slide-19 h1 {
+        font-size: 40px !important;
+        margin-bottom: 15px !important;
+        line-height: 1.2 !important;
+    }
+    
+    #slide-19 p {
+        font-size: 16px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    #slide-19 button {
+        padding: 10px 25px !important;
+        font-size: 14px !important;
+        margin-top: 20px !important;
+    }
+}
+
+/* Landscape en móviles */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .slide {
+        min-height: 100vh;
+        max-height: 100vh;
+        height: 100vh;
+        padding: 15px 20px 60px 20px;
+    }
+    
+    h1 {
+        font-size: 32px;
+    }
+    
+    .slide-title {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    
+    canvas {
+        max-height: 180px !important;
+        height: 180px !important;
+    }
+    
+    .image-wrapper {
+        max-height: 180px !important;
+        min-height: 150px !important;
+    }
+    
+    .image-wrapper canvas {
+        max-height: 180px !important;
+        height: 180px !important;
+    }
+    
+    .content-area {
+        gap: 15px;
+    }
+    
+    .two-column, .three-column, .grid-2x2 {
+        gap: 15px;
+    }
+    
+    /* Modal de zoom en landscape */
+    .image-modal {
+        padding: 10px;
+    }
+    
+    .zoom-content, #modalImage, .image-modal img {
+        max-width: 90% !important;
+        max-height: 75% !important;
+    }
+    
+    .image-modal-close {
+        top: 5px !important;
+        right: 10px !important;
+        font-size: 28px !important;
+    }
+    
+    /* Ajustar clones de zoom en landscape */
+    #zoomClone {
+        max-width: 90% !important;
+        max-height: 70vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        transform: scale(1) !important;
+    }
+    
+    #zoomClone * {
+        max-width: 100% !important;
+    }
+    
+    /* Slide 19 (Gracias) en landscape */
+    #slide-19 h1 {
+        font-size: 44px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    #slide-19 p {
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+    }
+    
+    #slide-19 button {
+        padding: 10px 25px !important;
+        font-size: 15px !important;
+        margin-top: 20px !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Modal de Zoom -->
+<div class="zoom-overlay" id="zoomOverlay">
+    <div class="zoom-content" id="zoomContent"></div>
+</div>
+
+<!-- Modal para zoom de imágenes -->
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img id="modalImage" src="" alt="Zoom">
+</div>
+
+<div class="presentation-container">
+    
+    <!-- Controles -->
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="prevSlide()" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-btn" onclick="nextSlide()" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="slide-counter" id="slide-counter">01 / 19</div>
+
+    <!-- SLIDE 1: Título -->
+    <div class="slide active" id="slide-1">
+        <div class="content-area" style="text-align: center; align-items: center; position: relative; overflow: hidden;">
+            <!-- Partículas flotantes de fondo -->
+            <canvas id="particles-title" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; z-index: 0;"></canvas>
+            
+            <!-- Contenido principal -->
+            <div style="position: relative; z-index: 2;">
+                <p class="animate-in" style="color: var(--accent); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 20px; font-size: 16px; animation: glowPulse 2s ease-in-out infinite;">GRUPO N°8 presenta</p>
+                
+                <!-- Título con efecto de escritura -->
+                <h1 class="animate-in d1" style="position: relative; display: inline-block;">
+                    <span class="typing-text" id="mainTitle"></span>
+                    <span class="cursor-blink">|</span>
+                </h1>
+                
+                <!-- Línea divisoria animada -->
+                <div class="animate-in d2" style="width: 120px; height: 6px; background: var(--accent-gradient); margin: 30px auto; border-radius: 3px; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); animation: expandLine 1.5s ease-out;"></div>
+                
+                <!-- Subtítulo con efecto de aparición -->
+                <p class="animate-in d3" style="font-size: 28px; color: white; margin-bottom: 40px; animation: fadeInUp 1s ease-out 1s both;">
+                    Teoría, Arquitectura Moderna y Aplicaciones IA
+                </p>
+                
+                <!-- Iconos flotantes de tecnología -->
+                <div class="tech-icons" style="display: flex; justify-content: center; gap: 30px; margin: 40px 0; flex-wrap: wrap;">
+                    <div class="tech-icon-box animate-in" style="animation-delay: 1.5s;">
+                        <i class="fas fa-database" style="font-size: 40px; color: #38bdf8;"></i>
+                        <div style="font-size: 12px; margin-top: 5px; color: #94a3b8;">SQL</div>
+                    </div>
+                    <div class="tech-icon-box animate-in" style="animation-delay: 1.7s;">
+                        <i class="fas fa-project-diagram" style="font-size: 40px; color: #818cf8;"></i>
+                        <div style="font-size: 12px; margin-top: 5px; color: #94a3b8;">NoSQL</div>
+                    </div>
+                    <div class="tech-icon-box animate-in" style="animation-delay: 1.9s;">
+                        <i class="fas fa-cloud" style="font-size: 40px; color: #4ade80;"></i>
+                        <div style="font-size: 12px; margin-top: 5px; color: #94a3b8;">Cloud</div>
+                    </div>
+                    <div class="tech-icon-box animate-in" style="animation-delay: 2.1s;">
+                        <i class="fas fa-brain" style="font-size: 40px; color: #f472b6;"></i>
+                        <div style="font-size: 12px; margin-top: 5px; color: #94a3b8;">IA</div>
+                    </div>
+                    <div class="tech-icon-box animate-in" style="animation-delay: 2.3s;">
+                        <i class="fas fa-chart-line" style="font-size: 40px; color: #fbbf24;"></i>
+                        <div style="font-size: 12px; margin-top: 5px; color: #94a3b8;">Analytics</div>
+                    </div>
+                </div>
+                
+                <!-- Botón de inicio pulsante -->
+                <div class="animate-in" style="animation-delay: 2.5s; margin-top: 50px;">
+                    <button onclick="nextSlide()" style="
+                        padding: 15px 40px;
+                        background: var(--accent-gradient);
+                        border: none;
+                        border-radius: 30px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        color: #0f172a;
+                        font-size: 18px;
+                        box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+                        animation: buttonPulse 2s ease-in-out infinite;
+                        transition: transform 0.3s ease;
+                    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fas fa-play"></i> Comenzar Presentación
+                    </button>
+                </div>
+                
+                <p class="animate-in d3" style="margin-top: 30px; font-size: 14px; color: #64748b; opacity: 0.7;">
+                    [También puedes usar Flecha Derecha →]
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: Datos vs Información (MEJORADO CON ANIMACIÓN) -->
+    <div class="slide" id="slide-2">
+        <h2 class="slide-title animate-in">Fundamentos: Dato vs Información</h2>
+        <div class="content-area two-column">
+            
+            <!-- CARD 1: DATOS (ANIMACIÓN CAOS) -->
+            <div class="card animate-in d1" style="position: relative; overflow: hidden;">
+                <!-- Fondo Animado de Ruido -->
+                <canvas id="canvas-raw" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; pointer-events: none;"></canvas>
+                
+                <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column;">
+                    <h3>Los Datos (Raw Data)</h3>
+                    <p>Hechos brutos, cifras y símbolos sin contexto semántico. Por sí mismos son "ruido".</p>
+                    <div style="margin-top: auto; background: #1e293b; padding: 20px; border-radius: 8px; font-family: monospace; color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);">
+                        <i class="fas fa-terminal" style="margin-right: 10px;"></i>INPUT: <br>
+                        > 105<br>
+                        > "Rojo"<br>
+                        > 0x4F3A
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: INFORMACIÓN (ANIMACIÓN ORDEN) -->
+            <div class="card animate-in d2" style="border-color: var(--accent); position: relative; overflow: hidden;">
+                <!-- Fondo Animado de Orden -->
+                <canvas id="canvas-processed" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; pointer-events: none;"></canvas>
+
+                <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column;">
+                    <h3>La Información (Processed)</h3>
+                    <p>Datos estructurados y procesados que otorgan contexto y utilidad para la toma de decisiones.</p>
+                    <div style="margin-top: auto; background: rgba(56, 189, 248, 0.1); padding: 20px; border-radius: 8px; font-family: monospace; color: var(--accent); border: 1px solid var(--accent);">
+                        <i class="fas fa-check-circle" style="margin-right: 10px;"></i>OUTPUT:<br>
+                        > Frecuencia: <strong>105 bpm</strong> (Alto)<br>
+                        > Triaje: <strong>Código Rojo</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: Historia (ACTUALIZADO CON ICONOS ANIMADOS) -->
+    <div class="slide" id="slide-3">
+        <h2 class="slide-title animate-in">Evolución Histórica</h2>
+        <div class="content-area">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; position: relative;">
+                <!-- Linea de tiempo (Ajustada posición) -->
+                <div style="position: absolute; top: 130px; left: 5%; width: 90%; height: 2px; background: #334155; z-index: 0;"></div>
+                
+                <!-- 1960s -->
+                <div class="animate-in d1" style="width: 22%; position: relative; z-index: 1; text-align: center;">
+                    <!-- Icono Animado -->
+                    <div class="timeline-icon-box">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div style="background: var(--bg-dark); padding: 5px 15px; display: inline-block; border: 1px solid var(--accent); border-radius: 20px; margin-bottom: 15px;">1960s</div>
+                    <h3>Archivos Planos</h3>
+                    <p style="font-size: 16px;">Modelos Jerárquicos (IMS). Alta redundancia.</p>
+                </div>
+
+                <!-- 1970s -->
+                <div class="animate-in d2" style="width: 22%; position: relative; z-index: 1; text-align: center;">
+                    <div class="timeline-icon-box" style="animation-delay: 0.5s;">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <div style="background: var(--bg-dark); padding: 5px 15px; display: inline-block; border: 1px solid var(--accent); border-radius: 20px; margin-bottom: 15px;">1970s</div>
+                    <h3>Relacional</h3>
+                    <p style="font-size: 16px;">SQL y Tablas. Nace la Independencia de Datos.</p>
+                </div>
+
+                <!-- 2000s -->
+                <div class="animate-in d3" style="width: 22%; position: relative; z-index: 1; text-align: center;">
+                    <div class="timeline-icon-box" style="animation-delay: 1s;">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div style="background: var(--bg-dark); padding: 5px 15px; display: inline-block; border: 1px solid var(--accent); border-radius: 20px; margin-bottom: 15px;">2000s</div>
+                    <h3>Era NoSQL</h3>
+                    <p style="font-size: 16px;">Big Data y Web 2.0. Flexibilidad (JSON).</p>
+                </div>
+
+                <!-- 2023+ -->
+                <div class="animate-in d4" style="width: 22%; position: relative; z-index: 1; text-align: center;">
+                    <div class="timeline-icon-box" style="animation-delay: 1.5s;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div style="background: var(--bg-dark); padding: 5px 15px; display: inline-block; border: 1px solid var(--accent); border-radius: 20px; margin-bottom: 15px;">2023+</div>
+                    <h3>IA & Vectores</h3>
+                    <p style="font-size: 16px;">Búsqueda Semántica y Embeddings.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: Arquitectura -->
+    <div class="slide" id="slide-4">
+        <h2 class="slide-title animate-in">Arquitectura: Los 3 Niveles (ANSI/SPARC)</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1">
+                <p>Para garantizar la <strong>Independencia de Datos</strong> (poder cambiar el hardware sin romper el software), los SGBD se dividen en:</p>
+                <ul style="margin-top: 20px;">
+                    <li><strong>Nivel Externo (Vistas):</strong> Lo que ve el usuario final (ej. Pantalla de "Mi Perfil"). Oculta datos sensibles.</li>
+                    <li><strong>Nivel Conceptual (Lógico):</strong> Qué datos se almacenan y sus relaciones (Tablas, Columnas). El dominio de los desarrolladores.</li>
+                    <li><strong>Nivel Interno (Físico):</strong> Cómo se guardan los bits en el disco (Índices B-Tree, Hashing, Compresión). Dominio del DBA.</li>
+                </ul>
+            </div>
+            <div class="image-placeholder animate-in d2">
+                <img src="https://myfpschool.com/wp-content/uploads/2017/03/5.2-arquitectura-ANSI-X3-SPARC.jpg" alt="Diagrama 3 Esquemas">
+                <p class="placeholder-text">DIAGRAMA: 3 NIVELES DE ABSTRACCIÓN</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: Escalabilidad -->
+    <div class="slide" id="slide-5">
+        <h2 class="slide-title animate-in">Escalabilidad: Vertical vs Horizontal</h2>
+        <div class="content-area three-column">
+            <!-- VERTICAL SCALING ANIMATION -->
+            <div class="card animate-in d1" style="position: relative; overflow: hidden;">
+                <canvas id="canvas-vertical" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; pointer-events: none;"></canvas>
+                <div style="position: relative; z-index: 2;">
+                    <h3>Vertical (Scale-Up)</h3>
+                    <p>Añadir más potencia (CPU, RAM) a un <strong>solo servidor</strong>.</p>
+                    
+                    <!-- VISUALIZACIÓN: UN SERVIDOR QUE CRECE -->
+                    <div style="display: flex; justify-content: center; margin: 20px 0;">
+                        <div class="server-box vertical-server" style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--accent); border-radius: 12px; padding: 20px; width: 120px; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                            <i class="fas fa-server" style="font-size: 40px; color: var(--accent);"></i>
+                            <div class="cpu-bar" style="margin-top: 10px; width: 80%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                <div class="cpu-fill" style="height: 100%; background: linear-gradient(to right, #4ade80, #fbbf24, #f87171); width: 30%; animation: growVertical 3s ease-in-out infinite;"></div>
+                            </div>
+                            <p style="font-size: 10px; margin-top: 5px; color: #94a3b8;">CPU/RAM ↑</p>
+                        </div>
+                    </div>
+
+                    <ul style="font-size: 14px;">
+                        <li><i class="fas fa-check" style="color: #4ade80;"></i> Fácil de implementar.</li>
+                        <li><i class="fas fa-times" style="color: #f87171;"></i> Límite físico de hardware.</li>
+                        <li><i class="fas fa-times" style="color: #f87171;"></i> Punto único de fallo.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- HORIZONTAL SCALING ANIMATION -->
+            <div class="card animate-in d2" style="position: relative; overflow: hidden;">
+                <canvas id="canvas-horizontal" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.25; pointer-events: none;"></canvas>
+                <div style="position: relative; z-index: 2;">
+                    <h3>Horizontal (Scale-Out)</h3>
+                    <p>Añadir <strong>más servidores</strong> para distribuir la carga.</p>
+                    
+                    <!-- VISUALIZACIÓN: MÚLTIPLES SERVIDORES -->
+                    <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+                        <div class="server-box" style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--accent); border-radius: 8px; padding: 12px; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeInScale 2s ease-in-out infinite; animation-delay: 0s;">
+                            <i class="fas fa-server" style="font-size: 20px; color: var(--accent);"></i>
+                            <div style="width: 30px; height: 3px; background: #4ade80; margin-top: 5px; border-radius: 2px;"></div>
+                        </div>
+                        <div class="server-box" style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--accent); border-radius: 8px; padding: 12px; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeInScale 2s ease-in-out infinite; animation-delay: 0.5s;">
+                            <i class="fas fa-server" style="font-size: 20px; color: var(--accent);"></i>
+                            <div style="width: 30px; height: 3px; background: #4ade80; margin-top: 5px; border-radius: 2px;"></div>
+                        </div>
+                        <div class="server-box" style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--accent); border-radius: 8px; padding: 12px; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeInScale 2s ease-in-out infinite; animation-delay: 1s;">
+                            <i class="fas fa-server" style="font-size: 20px; color: var(--accent);"></i>
+                            <div style="width: 30px; height: 3px; background: #4ade80; margin-top: 5px; border-radius: 2px;"></div>
+                        </div>
+                        <div class="server-box" style="background: rgba(56, 189, 248, 0.1); border: 2px solid var(--accent); border-radius: 8px; padding: 12px; width: 45px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: fadeInScale 2s ease-in-out infinite; animation-delay: 1.5s;">
+                            <i class="fas fa-server" style="font-size: 20px; color: var(--accent);"></i>
+                            <div style="width: 30px; height: 3px; background: #4ade80; margin-top: 5px; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+
+                    <ul style="font-size: 14px;">
+                        <li><i class="fas fa-check" style="color: #4ade80;"></i> Crecimiento ilimitado.</li>
+                        <li><i class="fas fa-check" style="color: #4ade80;"></i> Alta disponibilidad.</li>
+                        <li><i class="fas fa-times" style="color: #f87171;"></i> Complejidad de gestión.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- TÉCNICAS CLAVE ANIMATION -->
+            <div class="card animate-in d3" style="border-color: var(--accent); position: relative; overflow: hidden;">
+                <canvas id="canvas-techniques" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; pointer-events: none;"></canvas>
+                <div style="position: relative; z-index: 2;">
+                    <h3>Técnicas Clave</h3>
+                    
+                    <!-- REPLICACIÓN VISUAL -->
+                    <div style="margin: 15px 0;">
+                        <h4 style="font-size: 14px; color: #4ade80; margin-bottom: 8px;"><i class="fas fa-copy"></i> Replicación</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="background: rgba(74, 222, 128, 0.2); border: 2px solid #4ade80; border-radius: 6px; padding: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-database" style="color: #4ade80; font-size: 18px;"></i>
+                            </div>
+                            <i class="fas fa-arrow-right" style="color: #94a3b8; animation: pulse 2s infinite;"></i>
+                            <div style="display: flex; gap: 5px;">
+                                <div style="background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; border-radius: 4px; padding: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; animation: fadeInScale 1.5s ease-in-out infinite; animation-delay: 0.3s;">
+                                    <i class="fas fa-database" style="color: #4ade80; font-size: 12px;"></i>
+                                </div>
+                                <div style="background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; border-radius: 4px; padding: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; animation: fadeInScale 1.5s ease-in-out infinite; animation-delay: 0.6s;">
+                                    <i class="fas fa-database" style="color: #4ade80; font-size: 12px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 11px; margin-top: 5px; color: #cbd5e1;">Copiar datos → Lecturas rápidas + Backup</p>
+                    </div>
+
+                    <!-- SHARDING VISUAL -->
+                    <div style="margin: 15px 0;">
+                        <h4 style="font-size: 14px; color: #818cf8; margin-bottom: 8px;"><i class="fas fa-th"></i> Sharding</h4>
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <div style="background: rgba(129, 140, 248, 0.2); border: 2px solid #818cf8; border-radius: 6px; padding: 10px; width: 50px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <span style="font-size: 10px; color: #818cf8; font-weight: bold;">A-M</span>
+                                <i class="fas fa-database" style="color: #818cf8; font-size: 14px; margin-top: 3px;"></i>
+                            </div>
+                            <div style="background: rgba(244, 114, 182, 0.2); border: 2px solid #f472b6; border-radius: 6px; padding: 10px; width: 50px; height: 45px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <span style="font-size: 10px; color: #f472b6; font-weight: bold;">N-Z</span>
+                                <i class="fas fa-database" style="color: #f472b6; font-size: 14px; margin-top: 3px;"></i>
+                            </div>
+                        </div>
+                        <p style="font-size: 11px; margin-top: 5px; color: #cbd5e1;">Fragmentar → Escrituras masivas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: SQL Profundo -->
+    <div class="slide" id="slide-6">
+        <h2 class="slide-title animate-in">SQL: El Lenguaje Universal</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1">
+                <h4>Sub-lenguajes</h4>
+                <ul style="margin-bottom: 20px;">
+                    <li><strong>DDL (Definición):</strong> CREATE, ALTER, DROP (Estructura).</li>
+                    <li><strong>DML (Manipulación):</strong> SELECT, INSERT, UPDATE, DELETE (Datos).</li>
+                    <li><strong>TCL (Transacción):</strong> COMMIT, ROLLBACK (Control).</li>
+                </ul>
+                <div class="info-box">
+                    <strong>¿Sabías qué?</strong><br>
+                    SQL es declarativo. Tú dices <em>QUÉ</em> quieres, y el motor decide <em>CÓMO</em> obtenerlo. El orden de escritura (SELECT...) no es el orden de ejecución (FROM -> WHERE -> GROUP...).
+                </div>
+            </div>
+            <div class="image-placeholder animate-in d2">
+                <img src="https://www.kdnuggets.com/wp-content/uploads/ferrer_essential_guide_sql_execution_order_6.png" alt="Orden Ejecucion SQL">
+                <p class="placeholder-text">IMAGEN: ORDEN DE EJECUCIÓN SQL</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: Normalización -->
+    <div class="slide" id="slide-7">
+        <h2 class="slide-title animate-in">Normalización: Higiene de Datos</h2>
+        <div class="content-area">
+            <p class="animate-in">Proceso científico para eliminar redundancia y evitar anomalías (Insertar, Borrar, Actualizar).</p>
+            <div class="three-column" style="margin-top: 30px;">
+                <!-- 1NF - ATOMICIDAD -->
+                <div class="card animate-in d1" style="border-top: 4px solid #f87171; position: relative; overflow: hidden;">
+                    <canvas id="canvas-1nf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; pointer-events: none;"></canvas>
+                    <div style="position: relative; z-index: 2;">
+                        <h3><i class="fas fa-atom" style="color: #f87171;"></i> 1NF (Atomicidad)</h3>
+                        <p>Cada celda debe tener un único valor indivisible. No listas separadas por comas.</p>
+                        
+                        <!-- VISUALIZACIÓN: TABLA ANTES/DESPUÉS -->
+                        <div class="zoomable-visualization" style="margin-top: 20px; background: rgba(248, 113, 113, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(248, 113, 113, 0.3);">
+                            <div style="font-size: 11px; color: #f87171; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-times-circle"></i> ANTES (Incorrecto):</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px; margin-bottom: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 5px;">
+                                    <div style="color: #94a3b8;">ID</div><div style="color: #94a3b8;">Teléfonos</div>
+                                    <div>1</div><div style="color: #f87171;">555-1234, 555-5678</div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 11px; color: #4ade80; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-check-circle"></i> DESPUÉS (Correcto):</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 5px;">
+                                    <div style="color: #94a3b8;">ID</div><div style="color: #94a3b8;">Teléfono</div>
+                                    <div>1</div><div style="color: #4ade80;">555-1234</div>
+                                    <div>1</div><div style="color: #4ade80;">555-5678</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2NF - DEPENDENCIA -->
+                <div class="card animate-in d2" style="border-top: 4px solid #fbbf24; position: relative; overflow: hidden;">
+                    <canvas id="canvas-2nf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; pointer-events: none;"></canvas>
+                    <div style="position: relative; z-index: 2;">
+                        <h3><i class="fas fa-link" style="color: #fbbf24;"></i> 2NF (Dependencia)</h3>
+                        <p>Eliminar datos que no dependan de <em>toda</em> la clave primaria (en claves compuestas).</p>
+                        
+                        <!-- VISUALIZACIÓN: DEPENDENCIA PARCIAL -->
+                        <div class="zoomable-visualization" style="margin-top: 20px; background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                            <div style="font-size: 11px; color: #fbbf24; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-exclamation-triangle"></i> Problema:</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px; margin-bottom: 10px;">
+                                <div style="color: #fbbf24; margin-bottom: 5px;">Pedido(ID_Pedido, ID_Producto, Nombre_Producto)</div>
+                                <div style="color: #f87171; font-size: 9px;">↑ Nombre_Producto solo depende de ID_Producto</div>
+                            </div>
+                            
+                            <div style="font-size: 11px; color: #4ade80; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-check-circle"></i> Solución:</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px;">
+                                <div style="color: #4ade80; margin-bottom: 3px;">Pedido(ID_Pedido, ID_Producto)</div>
+                                <div style="color: #4ade80;">Producto(ID_Producto, Nombre)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3NF - TRANSITIVIDAD -->
+                <div class="card animate-in d3" style="border-top: 4px solid #34d399; position: relative; overflow: hidden;">
+                    <canvas id="canvas-3nf" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; pointer-events: none;"></canvas>
+                    <div style="position: relative; z-index: 2;">
+                        <h3><i class="fas fa-project-diagram" style="color: #34d399;"></i> 3NF (Transitividad)</h3>
+                        <p>"Nada más que la clave". Los datos no deben depender de otros campos que no sean la clave.</p>
+                        
+                        <!-- VISUALIZACIÓN: DEPENDENCIA TRANSITIVA -->
+                        <div class="zoomable-visualization" style="margin-top: 20px; background: rgba(52, 211, 153, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(52, 211, 153, 0.3);">
+                            <div style="font-size: 11px; color: #34d399; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-exclamation-triangle"></i> Problema:</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px; margin-bottom: 10px;">
+                                <div style="color: #fbbf24; margin-bottom: 5px;">Empleado(ID, Depto, Ciudad_Depto)</div>
+                                <div style="color: #f87171; font-size: 9px;">↑ Ciudad_Depto depende de Depto, no de ID</div>
+                            </div>
+                            
+                            <div style="font-size: 11px; color: #4ade80; font-weight: bold; margin-bottom: 8px;"><i class="fas fa-check-circle"></i> Solución:</div>
+                            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; font-family: monospace; font-size: 10px;">
+                                <div style="color: #4ade80; margin-bottom: 3px;">Empleado(ID, Depto)</div>
+                                <div style="color: #4ade80;">Departamento(Depto, Ciudad)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: Transacciones ACID -->
+    <div class="slide" id="slide-8">
+        <h2 class="slide-title animate-in">Transacciones & ACID</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1">
+                <p>Para que los sistemas financieros funcionen, las bases de datos garantizan:</p>
+                <ul style="margin-top: 20px; font-size: 20px;">
+                    <li><strong>A - Atomicidad:</strong> Todo o nada. Si falla un paso, se deshace todo.</li>
+                    <li><strong>C - Consistencia:</strong> Los datos siempre respetan las reglas.</li>
+                    <li><strong>I - Aislamiento:</strong> Operaciones simultáneas no interfieren entre sí.</li>
+                    <li><strong>D - Durabilidad:</strong> Una vez guardado, persiste aunque se vaya la luz.</li>
+                </ul>
+            </div>
+            <div class="card animate-in d2">
+                <h3>Ejemplo Práctico</h3>
+                <p>Transferencia Bancaria:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Restar $100 a Cuenta A.</li>
+                    <li>Sumar $100 a Cuenta B.</li>
+                </ol>
+                <p style="margin-top: 15px; color: #f87171;">Si paso 2 falla, paso 1 DEBE revertirse (Rollback) para no perder dinero.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: NoSQL Overview -->
+    <div class="slide" id="slide-9">
+        <h2 class="slide-title animate-in">El Mundo NoSQL</h2>
+        <div class="content-area">
+            <p class="animate-in">Cuando el modelo relacional frena la escalabilidad o flexibilidad.</p>
+            <div class="grid-2x2" style="margin-top: 30px;">
+                <div class="card animate-in d1">
+                    <h3><i class="fas fa-file-alt"></i> Documentales</h3>
+                    <p>MongoDB. Esquemas flexibles (JSON). Ideales para CMS y Catálogos.</p>
+                </div>
+                <div class="card animate-in d2">
+                    <h3><i class="fas fa-key"></i> Clave-Valor</h3>
+                    <p>Redis. Diccionarios ultrarrápidos. Caché y Sesiones.</p>
+                </div>
+                <div class="card animate-in d3">
+                    <h3><i class="fas fa-table"></i> Columnar</h3>
+                    <p>Cassandra. Big Data distribuido. Escrituras masivas (IoT, Logs).</p>
+                </div>
+                <div class="card animate-in d4">
+                    <h3><i class="fas fa-project-diagram"></i> Grafos</h3>
+                    <p>Neo4j. Relaciones complejas. Redes sociales y Fraude.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: Teorema CAP -->
+    <!-- SLIDE 10: Teorema CAP -->
+    <div class="slide" id="slide-10">
+        <h2 class="slide-title animate-in">Teorema CAP (Sistemas Distribuidos)</h2>
+        <div class="content-area two-column">
+            <div class="image-placeholder animate-in d1">
+                <img src="https://asesoftware.com/wp-content/uploads/2021/02/asesoftware-teorema-cap.png" alt="Teorema CAP">
+                <p class="placeholder-text">DIAGRAMA: TEOREMA CAP<br><small style="font-size: 10px; color: #64748b;">Click para ampliar</small></p>
+            </div>
+            <div class="animate-in d2">
+                <p>En sistemas distribuidos, solo puedes garantizar 2 de 3:</p>
+                <ul>
+                    <li><strong>Consistencia (C):</strong> Todos ven lo mismo al mismo tiempo.</li>
+                    <li><strong>Disponibilidad (A):</strong> Siempre responde, aunque fallen nodos.</li>
+                    <li><strong>Partición (P):</strong> Resiste cortes de red.</li>
+                </ul>
+                <div class="info-box">
+                    <strong>El Dilema:</strong> En la nube, P es obligatoria. Debes elegir entre C (Bancos, SQL) o A (Redes Sociales, NoSQL).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 11: Grafos Detalle (ANIMACIÓN DE RED) -->
+    <div class="slide" id="slide-11">
+        <h2 class="slide-title animate-in">Grafos: El Poder de las Conexiones</h2>
+        <div class="content-area two-column">
+            <!-- CANVAS ANIMACIÓN GRAFOS -->
+            <div class="image-wrapper animate-in d1" style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--accent); border-radius: 16px; position: relative; height: 100%;">
+                <canvas id="graph-canvas" style="width: 100%; height: 100%;"></canvas>
+                <div style="position: absolute; bottom: 15px; width: 100%; text-align: center; color: var(--accent); font-family: monospace; font-size: 14px;">
+                    <span id="graph-status">Simulando red en tiempo real...</span>
+                </div>
+            </div>
+            <div class="animate-in d2">
+                <p>En SQL, los JOINs son costosos. En Grafos, las relaciones se guardan físicamente.</p>
+                <br>
+                <h4>Casos de Uso:</h4>
+                <ul>
+                    <li><strong>Redes Sociales:</strong> "Amigos de amigos".</li>
+                    <li><strong>Recomendaciones:</strong> "Quien compró esto también..."</li>
+                    <li><strong>Fraude:</strong> Anillos de cuentas sospechosas.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 12: Columnar & Cloud -->
+    <div class="slide" id="slide-12">
+        <h2 class="slide-title animate-in">Big Data y Nube</h2>
+        <div class="content-area two-column">
+            <!-- COLUMN-FAMILY STORES -->
+            <div class="card animate-in d1" style="position: relative; overflow: hidden;">
+                <canvas id="canvas-columnar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; pointer-events: none;"></canvas>
+                <div style="position: relative; z-index: 2;">
+                    <h3><i class="fas fa-columns" style="color: #818cf8;"></i> Column-Family Stores</h3>
+                    <p>Almacenan por columnas, no filas. Permiten leer millones de datos agregados rápidamente.</p>
+                    <p><strong>Ejemplo:</strong> Cassandra maneja los likes de Facebook o datos de sensores IoT.</p>
+                    
+                    <!-- VISUALIZACIÓN: ALMACENAMIENTO COLUMNAR VS FILAS -->
+                    <div class="zoomable-visualization" style="margin-top: 20px; background: rgba(129, 140, 248, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(129, 140, 248, 0.3);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                            <!-- Por Filas (Tradicional) -->
+                            <div>
+                                <div style="font-size: 14px; color: #f87171; margin-bottom: 12px; font-weight: bold; text-align: center;">❌ Por Filas (Lento)</div>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; gap: 6px; justify-content: center;">
+                                        <div style="width: 50px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">ID</div>
+                                        <div style="width: 50px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Nom</div>
+                                        <div style="width: 50px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Age</div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; justify-content: center;">
+                                        <div style="width: 50px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">ID</div>
+                                        <div style="width: 50px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Nom</div>
+                                        <div style="width: 50px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Age</div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; justify-content: center;">
+                                        <div style="width: 50px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">ID</div>
+                                        <div style="width: 50px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Nom</div>
+                                        <div style="width: 50px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Age</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Por Columnas (Cassandra) -->
+                            <div>
+                                <div style="font-size: 14px; color: #4ade80; margin-bottom: 12px; font-weight: bold; text-align: center;">✅ Por Columnas (Rápido)</div>
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <div style="width: 45px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">1</div>
+                                        <div style="width: 45px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">2</div>
+                                        <div style="width: 45px; height: 35px; background: #f87171; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">3</div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <div style="width: 45px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 11px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Ana</div>
+                                        <div style="width: 45px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 11px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Bob</div>
+                                        <div style="width: 45px; height: 35px; background: #fbbf24; border-radius: 6px; font-size: 11px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Carl</div>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <div style="width: 45px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">25</div>
+                                        <div style="width: 45px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">30</div>
+                                        <div style="width: 45px; height: 35px; background: #4ade80; border-radius: 6px; font-size: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">28</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; margin-top: 15px; color: #818cf8; text-align: center; font-weight: bold;"><i class="fas fa-bolt"></i> Agregación de columna = 1 lectura vs millones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLOUD DATABASES -->
+            <div class="card animate-in d2" style="position: relative; overflow: hidden;">
+                <canvas id="canvas-cloud" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.2; pointer-events: none;"></canvas>
+                <div style="position: relative; z-index: 2;">
+                    <h3><i class="fas fa-cloud" style="color: #38bdf8;"></i> Cloud Databases (DBaaS)</h3>
+                    <p>Servicios gestionados (AWS RDS, Azure SQL). Te olvidas de parches, backups y hardware.</p>
+                    <p><strong>Tendencia:</strong> Serverless (Aurora, TiDB) que escalan automáticamente según la demanda.</p>
+                    
+                    <!-- VISUALIZACIÓN: ARQUITECTURA CLOUD -->
+                    <div class="zoomable-visualization" style="margin-top: 20px; background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="display: inline-block; background: rgba(56, 189, 248, 0.2); border: 2px solid #38bdf8; border-radius: 8px; padding: 10px 20px;">
+                                <i class="fas fa-users" style="color: #38bdf8; font-size: 20px;"></i>
+                                <div style="font-size: 9px; color: #94a3b8; margin-top: 5px;">Usuarios</div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 10px 0;">
+                            <i class="fas fa-arrow-down" style="color: #38bdf8; font-size: 16px; animation: bounce 2s infinite;"></i>
+                        </div>
+                        
+                        <!-- Capa Cloud -->
+                        <div style="background: rgba(56, 189, 248, 0.15); border-radius: 8px; padding: 12px; border: 1px dashed #38bdf8;">
+                            <div style="font-size: 10px; color: #38bdf8; font-weight: bold; margin-bottom: 8px; text-align: center;">
+                                <i class="fas fa-cloud"></i> Cloud Provider (AWS/Azure/GCP)
+                            </div>
+                            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                                <div style="background: rgba(74, 222, 128, 0.2); border: 1px solid #4ade80; border-radius: 6px; padding: 8px; width: 60px; text-align: center;">
+                                    <i class="fas fa-database" style="color: #4ade80; font-size: 16px;"></i>
+                                    <div style="font-size: 8px; color: #94a3b8; margin-top: 3px;">RDS</div>
+                                </div>
+                                <div style="background: rgba(129, 140, 248, 0.2); border: 1px solid #818cf8; border-radius: 6px; padding: 8px; width: 60px; text-align: center;">
+                                    <i class="fas fa-server" style="color: #818cf8; font-size: 16px;"></i>
+                                    <div style="font-size: 8px; color: #94a3b8; margin-top: 3px;">Backup</div>
+                                </div>
+                                <div style="background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; border-radius: 6px; padding: 8px; width: 60px; text-align: center;">
+                                    <i class="fas fa-chart-line" style="color: #fbbf24; font-size: 16px;"></i>
+                                    <div style="font-size: 8px; color: #94a3b8; margin-top: 3px;">Auto-scale</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p style="font-size: 10px; margin-top: 10px; color: #38bdf8; text-align: center;">
+                            <i class="fas fa-magic"></i> Gestión automática de infraestructura
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 13: In-Memory -->
+    <div class="slide" id="slide-13">
+        <h2 class="slide-title animate-in">Velocidad In-Memory</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1">
+                <h3>Redis, Memcached, Valkey</h3>
+                <p>Los datos viven en la RAM. La lectura es en microsegundos, miles de veces más rápido que un disco SSD.</p>
+                <br>
+                <p><strong>Vital para:</strong></p>
+                <ul>
+                    <li>Caché de aplicaciones.</li>
+                    <li>Tableros de juegos (Leaderboards).</li>
+                    <li>Subastas de publicidad en tiempo real.</li>
+                </ul>
+            </div>
+            <div class="image-placeholder animate-in d2">
+                <img src="https://linuxiac.com/wp-content/uploads/2021/06/redis-how-it-works.png" alt="Velocidad">
+                <p class="placeholder-text">IMAGEN: COMPARATIVA VELOCIDAD RAM vs DISCO</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 14: Vectores & IA (3D ANIMATION) -->
+    <div class="slide" id="slide-14">
+        <h2 class="slide-title animate-in">La Revolución Vectorial (IA)</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1" style="z-index: 2;">
+                <h3>Embeddings y Significado</h3>
+                <p>La IA transforma texto/imágenes en vectores numéricos. Conceptos similares están matemáticamente cerca.</p>
+                <div class="info-box" style="background: rgba(34, 197, 94, 0.1); border-color: #22c55e;">
+                    <strong>Visualización 3D:</strong><br>
+                    El cubo representa el espacio semántico. Observa cómo la búsqueda viaja hacia los conceptos relacionados (Frutas, Vehículos).
+                </div>
+            </div>
+            <!-- 3D CANVAS CONTAINER - AMPLIADO -->
+            <div class="image-wrapper animate-in d2" style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--accent); border-radius: 16px; position: relative; height: 550px;">
+                <canvas id="vector-canvas" style="width: 100%; height: 100%;"></canvas>
+                <div id="vector-ui" style="position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; font-family: monospace; color: var(--accent); font-size: 14px; text-align: center;">
+                    <span id="vector-query-text">Inicializando IA...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 15: Buscadores (ACTUALIZADO CON TODOS LOS DATOS) -->
+    <div class="slide" id="slide-15">
+        <h2 class="slide-title animate-in">Comparativa: Motores de Búsqueda</h2>
+        <div class="content-area">
+            <table class="animate-in d1" style="font-size: 13px;"> <!-- Fuente reducida para ajustar -->
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Aspecto</th>
+                        <th style="width: 28%;">Elasticsearch</th>
+                        <th style="width: 28%;">OpenSearch (AWS)</th>
+                        <th style="width: 28%;">ValkeySearch</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Definición</strong></td>
+                        <td>Motor líder (Elastic NV). Lucene. Búsquedas complejas y logs masivos.</td>
+                        <td>100% Open Source (Amazon). Fork de Elastic 7.10 con funciones extra.</td>
+                        <td>Motor en memoria (RAM) basado en Valkey. Búsqueda ultrarrápida.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Licencia</strong></td>
+                        <td>Propietaria (SSPL) desde 2021. Funciones avanzadas pagas.</td>
+                        <td><span style="color: #4ade80;">100% Libre (Apache 2.0).</span> Sin restricciones.</td>
+                        <td><span style="color: #4ade80;">Open Source (BSD).</span> Alternativa libre a Redis.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Matemática</strong></td>
+                        <td>BM25 como principal. Soporte TF-IDF.</td>
+                        <td>Mismas fórmulas (BM25/Lucene) que Elastic.</td>
+                        <td>BM25 y TF-IDF optimizados en memoria.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IA Vectorial</strong></td>
+                        <td>Soporte bueno, pero funciones avanzadas (KNN) suelen ser pagas.</td>
+                        <td><span style="color: #4ade80;">Vector search gratis.</span> Ideal para RAG y embeddings.</td>
+                        <td><span style="color: #4ade80;">Vectores en RAM (HNSW).</span> Extremadamente rápido.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Funciones ML</strong></td>
+                        <td>ML y Anomalías solo en versión paga (X-Pack).</td>
+                        <td><span style="color: #4ade80;">ML y Anomalías totalmente gratis.</span></td>
+                        <td>Sin ML integrado. Se usa como motor de scoring rápido.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rendimiento</strong></td>
+                        <td>Muy rápido, escalable a nivel empresarial (Disco/RAM).</td>
+                        <td>Igual de rápido y estable que Elastic 7.10.</td>
+                        <td><span style="color: #f472b6;">El más rápido (Microsegundos).</span> Limitado por RAM.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SLIDE 16: Comparativa Específica (ACTUALIZADO CON IMÁGENES) -->
+    <div class="slide" id="slide-16">
+        <h2 class="slide-title animate-in">Valkey vs Milvus</h2>
+        <div class="content-area two-column">
+            <div class="card animate-in d1">
+                <!-- ESPACIO IMAGEN VALKEY -->
+                <div class="card-img-top">
+                    <img src="https://valkey.io/img/valkey-logo-og.png" alt="Valkey">
+                </div>
+                <h3>Valkey (Generalista)</h3>
+                <p>Base NoSQL en memoria (Fork de Redis).</p>
+                <ul>
+                    <li><strong>Ventaja:</strong> Velocidad extrema para todo (cache, colas, vectores).</li>
+                    <li><strong>Ideal para:</strong> Si ya usas Redis y quieres añadir IA simple.</li>
+                </ul>
+            </div>
+            <div class="card animate-in d2" style="border-color: #4ade80;">
+                <!-- ESPACIO IMAGEN MILVUS -->
+                <div class="card-img-top">
+                    <img src="https://artwork.lfaidata.foundation/projects/milvus/icon/color/milvus-icon-color.png" alt="Milvus">
+                </div>
+                <h3>Milvus (Especialista)</h3>
+                <p>Base de Datos Vectorial Nativa.</p>
+                <ul>
+                    <li><strong>Ventaja:</strong> Escalabilidad masiva (billones de vectores).</li>
+                    <li><strong>Ideal para:</strong> Sistemas de IA pura a gran escala (ej. ChatGPT empresarial).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 17: Móviles -->
+    <div class="slide" id="slide-17">
+        <h2 class="slide-title animate-in">Bases de Datos Móviles</h2>
+        <div class="content-area two-column">
+            <div class="animate-in d1">
+                <h3>Estrategia Offline-First</h3>
+                <p>Las apps modernas guardan datos en el dispositivo para funcionar en "modo avión" y sincronizan al recuperar conexión.</p>
+                <br>
+                <p><strong>Tecnologías:</strong></p>
+                <ul>
+                    <li><strong>SQLite:</strong> Estándar SQL ligero (Android/iOS).</li>
+                    <li><strong>Realm:</strong> Base orientada a objetos con sincronización nube.</li>
+                </ul>
+            </div>
+            <div class="image-placeholder animate-in d2">
+                <img src="https://media.licdn.com/dms/image/v2/D4D12AQHCzGjgqJJqzA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1725716210050?e=2147483647&v=beta&t=enRyPRzJAG9yYGAr65dvKkFkpiOGnvl2PZpkN0_yajg" alt="Mobile">
+                <p class="placeholder-text">IMAGEN: SINCRONIZACIÓN MÓVIL-NUBE</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 18: Conclusiones -->
+    <div class="slide" id="slide-18">
+        <h2 class="slide-title animate-in">Conclusiones Finales</h2>
+        <div class="content-area three-column">
+            <div class="card animate-in d1">
+                <h1>01</h1>
+                <p><strong>Persistencia Políglota:</strong> No uses una sola base para todo. SQL para transacciones, NoSQL para flexibilidad.</p>
+            </div>
+            <div class="card animate-in d2">
+                <h1>02</h1>
+                <p><strong>IA es el Presente:</strong> Las bases vectoriales son la nueva infraestructura crítica para aplicaciones inteligentes (RAG).</p>
+            </div>
+            <div class="card animate-in d3">
+                <h1>03</h1>
+                <p><strong>Arquitectura:</strong> Entender CAP, Normalización y ACID es vital para diseñar sistemas robustos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 19: Despedida -->
+    <div class="slide" id="slide-19">
+        <div class="content-area" style="text-align: center; align-items: center;">
+            <h1 class="animate-in" style="font-size: 100px;">¡Gracias!</h1>
+            <p class="animate-in d1" style="font-size: 24px;">¿Preguntas?</p>
+            <button onclick="triggerConfetti()" class="animate-in d2" style="margin-top: 40px; padding: 15px 40px; background: var(--accent); border: none; border-radius: 30px; font-weight: bold; cursor: pointer; color: #0f172a; font-size: 20px; box-shadow: 0 0 20px rgba(56,189,248,0.5);">
+                <i class="fas fa-magic"></i> Aplaudir
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- 1. SISTEMA DE DIAPOSITIVAS ---
+    let currentSlide = 1;
+    const totalSlides = 19;
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('slide-counter');
+
+    // Efecto de escritura para el título
+    const titleText = "Sistemas de\nBases de Datos";
+    let titleIndex = 0;
+    let titleElement = document.getElementById('mainTitle');
+    
+    function typeTitle() {
+        if (titleIndex < titleText.length) {
+            const char = titleText.charAt(titleIndex);
+            if (char === '\n') {
+                titleElement.innerHTML += '<br>';
+            } else {
+                titleElement.textContent += char;
+            }
+            titleIndex++;
+            setTimeout(typeTitle, 100);
+        }
+    }
+    
+    // Iniciar efecto de escritura cuando carga la página
+    if(titleElement) {
+        setTimeout(typeTitle, 500);
+    }
+
+    // Partículas flotantes en el título
+    function initTitleParticles() {
+        const canvas = document.getElementById('particles-title');
+        if(!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+        
+        const particles = [];
+        const particleCount = 50;
+        
+        for(let i=0; i<particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 3 + 1,
+                color: Math.random() > 0.5 ? '#38bdf8' : '#818cf8'
+            });
+        }
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                // Conexiones
+                particles.forEach(p2 => {
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if(dist < 100) {
+                        ctx.strokeStyle = p.color;
+                        ctx.globalAlpha = 0.2 * (1 - dist/100);
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                });
+            });
+            
+            if(document.getElementById('slide-1').classList.contains('active')) {
+                requestAnimationFrame(animateParticles);
+            }
+        }
+        
+        animateParticles();
+    }
+    
+    // Iniciar partículas del título
+    initTitleParticles();
+
+    function showSlide(n) {
+        if (n > totalSlides) currentSlide = 1;
+        else if (n < 1) currentSlide = totalSlides;
+        else currentSlide = n;
+
+        slides.forEach(slide => slide.classList.remove('active'));
+        document.getElementById(`slide-${currentSlide}`).classList.add('active');
+        counter.textContent = `${currentSlide.toString().padStart(2, '0')} / ${totalSlides}`;
+        
+        // Animaciones Especiales
+        if(currentSlide === 2) startDataAnimation(); // NUEVA: Datos vs Info
+        if(currentSlide === 5) startScalabilityAnimation(); // NUEVA: Escalabilidad
+        if(currentSlide === 6) startVectorAnimation(); // Slide 6 es Vectores
+        if(currentSlide === 7) startNormalizationAnimation(); // NUEVA: Normalización
+        if(currentSlide === 11) startGraphAnimation(); // Animación de Grafos
+        if(currentSlide === 12) startBigDataAnimation(); // NUEVA: Big Data y Nube
+        if(currentSlide === 14) startVectorAnimation(); // Slide 14 también usa la misma lógica vectorial
+    }
+
+    function nextSlide() { showSlide(currentSlide + 1); if(currentSlide===totalSlides) triggerConfetti(); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+        if (e.key === 'Escape') closeImageModal();
+    });
+
+    // --- FUNCIONES DE ZOOM DE IMÁGENES ---
+    function openImageModal(imageSrc) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.classList.add('active');
+        modalImg.src = imageSrc;
+        document.body.style.overflow = 'hidden'; // Prevenir scroll
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restaurar scroll
+    }
+
+    // Cerrar modal al hacer click fuera de la imagen
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'imageModal') {
+            closeImageModal();
+        }
+    });
+
+    // Agregar evento click a todas las imágenes usando delegación
+    document.addEventListener('click', function(e) {
+        // Verificar si el click fue en una imagen dentro de image-placeholder o card-img-top
+        if (e.target.tagName === 'IMG') {
+            const parent = e.target.closest('.image-placeholder, .card-img-top');
+            if (parent && e.target.src && !e.target.src.includes('data:image/svg')) {
+                e.stopPropagation();
+                openImageModal(e.target.src);
+            }
+        }
+        
+        // NUEVO: Click en visualizaciones personalizadas
+        const zoomableDiv = e.target.closest('.zoomable-visualization');
+        if (zoomableDiv && !e.target.closest('.image-modal')) {
+            e.stopPropagation();
+            openDivZoom(zoomableDiv);
+        }
+    });
+
+    // Función para hacer zoom de divs completos
+    function openDivZoom(element) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        
+        // Ocultar la imagen
+        modalImg.style.display = 'none';
+        
+        // Detectar si es móvil
+        const isMobile = window.innerWidth <= 768;
+        const isSmallMobile = window.innerWidth <= 480;
+        
+        // Clonar el elemento
+        const clone = element.cloneNode(true);
+        clone.classList.remove('zoomable-visualization');
+        
+        // Ajustar escala según dispositivo
+        if (isSmallMobile) {
+            clone.style.transform = 'scale(1)';
+            clone.style.maxWidth = '92%';
+            clone.style.maxHeight = '75vh';
+        } else if (isMobile) {
+            clone.style.transform = 'scale(1.1)';
+            clone.style.maxWidth = '95%';
+            clone.style.maxHeight = '80vh';
+        } else {
+            clone.style.transform = 'scale(1.8)';
+            clone.style.maxWidth = '95%';
+            clone.style.maxHeight = '95vh';
+        }
+        
+        clone.style.overflow = 'auto';
+        clone.style.position = 'relative';
+        clone.style.backgroundColor = element.style.backgroundColor || 'rgba(30, 41, 59, 0.95)';
+        clone.style.borderRadius = '12px';
+        clone.style.padding = isMobile ? '15px' : '20px';
+        clone.id = 'zoomClone';
+        
+        modal.appendChild(clone);
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const clone = document.getElementById('zoomClone');
+        
+        modal.classList.remove('active');
+        modalImg.style.display = 'block';
+        if(clone) clone.remove();
+        document.body.style.overflow = '';
+    }
+
+    // --- 2. FONDO DE PARTÍCULAS ---
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let bgW, bgH, particles = [];
+
+    function resizeBg() { bgW = bgCanvas.width = window.innerWidth; bgH = bgCanvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeBg);
+    resizeBg();
+
+    for(let i=0; i<60; i++) particles.push({
+        x: Math.random()*bgW, y: Math.random()*bgH,
+        vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+        size: Math.random()*2
+    });
+
+    function animateBg() {
+        bgCtx.clearRect(0,0,bgW,bgH);
+        bgCtx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.x<0 || p.x>bgW) p.vx*=-1;
+            if(p.y<0 || p.y>bgH) p.vy*=-1;
+            bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); bgCtx.fill();
+            
+            // Conexiones sutiles
+            particles.forEach(p2 => {
+                let dx = p.x - p2.x, dy = p.y - p2.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 100) {
+                    bgCtx.strokeStyle = `rgba(56, 189, 248, ${0.1 - dist/1000})`;
+                    bgCtx.beginPath(); bgCtx.moveTo(p.x, p.y); bgCtx.lineTo(p2.x, p2.y); bgCtx.stroke();
+                }
+            });
+        });
+        requestAnimationFrame(animateBg);
+    }
+    animateBg();
+
+    // --- 3. CONFETI ---
+    function triggerConfetti() {
+        const cCanvas = document.getElementById('confetti-canvas');
+        const cCtx = cCanvas.getContext('2d');
+        cCanvas.width = window.innerWidth; cCanvas.height = window.innerHeight;
+        let conf = [];
+        const colors = ['#38bdf8', '#818cf8', '#f472b6', '#34d399', '#fbbf24'];
+        for(let i=0;i<150;i++) conf.push({
+            x:Math.random()*cCanvas.width, y:Math.random()*cCanvas.height-cCanvas.height,
+            c:colors[Math.floor(Math.random()*colors.length)], s:Math.random()*6+3, v:Math.random()*5+4
+        });
+        
+        function drawC() {
+            cCtx.clearRect(0,0,cCanvas.width,cCanvas.height);
+            let active=false;
+            conf.forEach(p=>{
+                p.y+=p.v; p.x += Math.sin(p.y/20);
+                if(p.y<cCanvas.height) active=true;
+                cCtx.fillStyle=p.c; cCtx.fillRect(p.x,p.y,p.s,p.s);
+            });
+            if(active) requestAnimationFrame(drawC);
+        }
+        drawC();
+    }
+
+    // --- 4. ANIMACIÓN VECTORIAL 3D ---
+    let vectorAnimId;
+    function startVectorAnimation() {
+        const canvas = document.getElementById('vector-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.parentElement.offsetWidth;
+        let height = canvas.height = canvas.parentElement.offsetHeight;
+
+        const clusters = { 'Frutas': {x: -120, y: -120, z: -120, c: '#f87171'}, 'Vehículos': {x: 120, y: 120, z: 120, c: '#60a5fa'}, 'Animales': {x: -120, y: 120, z: 0, c: '#facc15'} };
+        const words = [ {t:"Manzana", g:'Frutas'}, {t:"Pera", g:'Frutas'}, {t:"Uva", g:'Frutas'}, {t:"Coche", g:'Vehículos'}, {t:"Moto", g:'Vehículos'}, {t:"Avión", g:'Vehículos'}, {t:"Gato", g:'Animales'}, {t:"Perro", g:'Animales'}, {t:"Lobo", g:'Animales'} ];
+        let points = words.map(w => ({ t: w.t, x: clusters[w.g].x + (Math.random()-0.5)*90, y: clusters[w.g].y + (Math.random()-0.5)*90, z: clusters[w.g].z + (Math.random()-0.5)*90, c: clusters[w.g].c }));
+        let angleX = 0, angleY = 0;
+        let query = null; 
+        let timer = 0;
+        let scIndex = 0;
+        const scenarios = [ {q: "Query: 'Roja y dulce'", t: 'Frutas'}, {q: "Query: 'Motor rápido'", t: 'Vehículos'}, {q: "Query: 'Mascota fiel'", t: 'Animales'} ];
+
+        function project(x, y, z) {
+            let x1 = x * Math.cos(angleY) - z * Math.sin(angleY);
+            let z1 = z * Math.cos(angleY) + x * Math.sin(angleY);
+            let y1 = y * Math.cos(angleX) - z1 * Math.sin(angleX);
+            let z2 = z1 * Math.cos(angleX) + y * Math.sin(angleX);
+            let scale = 400 / (400 + z2 + 500);
+            return { x: x1*scale + width/2, y: y1*scale + height/2, s: scale, z: z2 };
+        }
+
+        function drawLine(p1, p2, color, width=1) { ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke(); }
+
+        function loop() {
+            ctx.clearRect(0,0,width,height);
+            angleY += 0.008;
+            const s = 180; 
+            const v = [ {x:-s,y:-s,z:-s}, {x:s,y:-s,z:-s}, {x:s,y:s,z:-s}, {x:-s,y:s,z:-s}, {x:-s,y:-s,z:s}, {x:s,y:-s,z:s}, {x:s,y:s,z:s}, {x:-s,y:s,z:s} ].map(p => project(p.x, p.y, p.z));
+            const edges = [[0,1],[1,2],[2,3],[3,0], [4,5],[5,6],[6,7],[7,4], [0,4],[1,5],[2,6],[3,7]];
+            edges.forEach(e => drawLine(v[e[0]], v[e[1]], 'rgba(56, 189, 248, 0.1)'));
+
+            if(!query) {
+                timer++;
+                if(timer > 100) {
+                    timer = 0; let sc = scenarios[scIndex]; let target = clusters[sc.t];
+                    document.getElementById('vector-query-text').innerText = sc.q;
+                    document.getElementById('vector-query-text').style.color = "#4ade80";
+                    query = { x: 0, y: 0, z: 0, tx: target.x, ty: target.y, tz: target.z, p: 0, state: 0 };
+                    scIndex = (scIndex+1)%scenarios.length;
+                }
+            } else {
+                if(query.state === 0) {
+                    query.p += 0.03; query.x = query.tx * query.p; query.y = query.ty * query.p; query.z = query.tz * query.p;
+                    if(query.p >= 1) query.state = 1;
+                } else {
+                    timer++; if(timer > 80) { query = null; timer = 0; document.getElementById('vector-query-text').innerText = "Vectorizando..."; document.getElementById('vector-query-text').style.color = "#38bdf8"; }
+                }
+            }
+
+            let renderList = [];
+            points.forEach(p => renderList.push({type:'point', obj:p, proj:project(p.x, p.y, p.z)}));
+            if(query) renderList.push({type:'query', obj:query, proj:project(query.x, query.y, query.z)});
+            renderList.sort((a,b) => b.proj.z - a.proj.z);
+            const center = project(0,0,0);
+
+            renderList.forEach(item => {
+                if(item.type === 'point') {
+                    ctx.globalAlpha = Math.min(1, item.proj.s); ctx.fillStyle = item.obj.c;
+                    ctx.beginPath(); ctx.arc(item.proj.x, item.proj.y, 7*item.proj.s, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = "white"; ctx.font = (18*item.proj.s)+"px monospace"; ctx.fillText(item.obj.t, item.proj.x+12, item.proj.y+6); ctx.globalAlpha = 1;
+                } else {
+                    drawLine(center, item.proj, '#4ade80', 3); ctx.fillStyle = "#4ade80"; ctx.beginPath(); ctx.arc(item.proj.x, item.proj.y, 10*item.proj.s, 0, Math.PI*2); ctx.fill();
+                }
+            });
+
+            if(document.getElementById('slide-14').classList.contains('active') || document.getElementById('slide-6').classList.contains('active')) {
+                vectorAnimId = requestAnimationFrame(loop);
+            }
+        }
+        cancelAnimationFrame(vectorAnimId);
+        loop();
+    }
+
+    // --- 5. ANIMACIÓN GRAFOS (Slide 11) ---
+    let graphAnimId;
+    function startGraphAnimation() {
+        const canvas = document.getElementById('graph-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.parentElement.offsetWidth;
+        let height = canvas.height = canvas.parentElement.offsetHeight;
+
+        const nodes = [];
+        const numNodes = 15;
+        for(let i=0; i<numNodes; i++) {
+            nodes.push({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, r: Math.random()*3 + 3, id: i });
+        }
+        
+        const links = [];
+        nodes.forEach((node, i) => {
+            for(let j=i+1; j<numNodes; j++) { if(Math.random() > 0.7) links.push({source: i, target: j}); }
+        });
+
+        let pulses = [];
+
+        function loopGraph() {
+            ctx.clearRect(0,0,width,height);
+            nodes.forEach(n => { n.x += n.vx; n.y += n.vy; if(n.x < 0 || n.x > width) n.vx *= -1; if(n.y < 0 || n.y > height) n.vy *= -1; });
+
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)'; ctx.lineWidth = 1;
+            links.forEach(l => {
+                const s = nodes[l.source]; const t = nodes[l.target];
+                ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y); ctx.stroke();
+                if(Math.random() < 0.005) pulses.push({ linkIdx: links.indexOf(l), p: 0, speed: 0.02 });
+            });
+
+            nodes.forEach(n => { ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'rgba(56, 189, 248, 0.3)'; ctx.beginPath(); ctx.arc(n.x, n.y, n.r*2, 0, Math.PI*2); ctx.fill(); });
+
+            for(let i=pulses.length-1; i>=0; i--) {
+                let pulse = pulses[i]; let link = links[pulse.linkIdx]; let s = nodes[link.source]; let t = nodes[link.target];
+                pulse.p += pulse.speed; let cx = s.x + (t.x - s.x) * pulse.p; let cy = s.y + (t.y - s.y) * pulse.p;
+                ctx.fillStyle = '#fff'; ctx.shadowBlur = 10; ctx.shadowColor = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                if(pulse.p >= 1) pulses.splice(i, 1);
+            }
+
+            if(document.getElementById('slide-11').classList.contains('active')) {
+                graphAnimId = requestAnimationFrame(loopGraph);
+            }
+        }
+        cancelAnimationFrame(graphAnimId);
+        loopGraph();
+    }
+
+    // --- 6. ANIMACIÓN DATA vs INFO (Slide 2) ---
+    let dataAnimId;
+    function startDataAnimation() {
+        // 6.1 RAW DATA (Lluvia Matrix)
+        const cRaw = document.getElementById('canvas-raw');
+        const cProc = document.getElementById('canvas-processed');
+        if(!cRaw || !cProc) return;
+
+        const ctxRaw = cRaw.getContext('2d');
+        const ctxProc = cProc.getContext('2d');
+        
+        // Resize
+        cRaw.width = cRaw.parentElement.offsetWidth; cRaw.height = cRaw.parentElement.offsetHeight;
+        cProc.width = cProc.parentElement.offsetWidth; cProc.height = cProc.parentElement.offsetHeight;
+
+        // Config Raw
+        const chars = "0101010101ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const drops = [];
+        const fontSize = 14;
+        const columns = cRaw.width / fontSize;
+        for(let i=0; i<columns; i++) drops[i] = 1;
+
+        // Config Processed (Ondas)
+        let waveOffset = 0;
+
+        function loopData() {
+            // --- RAW ---
+            ctxRaw.fillStyle = "rgba(15, 23, 42, 0.1)"; // Trail effect
+            ctxRaw.fillRect(0, 0, cRaw.width, cRaw.height);
+            ctxRaw.fillStyle = "#64748b"; // Color grisaceo (ruido)
+            ctxRaw.font = fontSize + "px monospace";
+
+            for(let i=0; i<drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random()*chars.length));
+                ctxRaw.fillText(text, i*fontSize, drops[i]*fontSize);
+                if(drops[i]*fontSize > cRaw.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+
+            // --- PROCESSED ---
+            ctxProc.clearRect(0,0,cProc.width, cProc.height);
+            
+            // Dibujar Onda Senoidal (Orden)
+            ctxProc.beginPath();
+            ctxProc.moveTo(0, cProc.height/2);
+            for(let i=0; i<cProc.width; i++) {
+                ctxProc.lineTo(i, cProc.height/2 + Math.sin(i*0.02 + waveOffset)*30);
+            }
+            ctxProc.strokeStyle = "#38bdf8";
+            ctxProc.lineWidth = 2;
+            ctxProc.stroke();
+
+            // Dibujar Barras Estables (Estructura)
+            const barWidth = 20;
+            const gap = 10;
+            const numBars = Math.floor(cProc.width / (barWidth+gap));
+            ctxProc.fillStyle = "rgba(56, 189, 248, 0.2)";
+            for(let i=0; i<numBars; i++) {
+                let h = 40 + Math.sin(i + waveOffset*0.5)*20; // Movimiento suave
+                ctxProc.fillRect(i*(barWidth+gap), cProc.height - h - 10, barWidth, h);
+            }
+
+            waveOffset += 0.05;
+
+            if(document.getElementById('slide-2').classList.contains('active')) {
+                dataAnimId = requestAnimationFrame(loopData);
+            }
+        }
+        cancelAnimationFrame(dataAnimId);
+        loopData();
+    }
+
+    // --- 7. ANIMACIÓN ESCALABILIDAD (Slide 5) ---
+    let scalabilityAnimId;
+    function startScalabilityAnimation() {
+        const cVertical = document.getElementById('canvas-vertical');
+        const cHorizontal = document.getElementById('canvas-horizontal');
+        const cTechniques = document.getElementById('canvas-techniques');
+        
+        if(!cVertical || !cHorizontal || !cTechniques) return;
+
+        const ctxV = cVertical.getContext('2d');
+        const ctxH = cHorizontal.getContext('2d');
+        const ctxT = cTechniques.getContext('2d');
+
+        // Resize
+        cVertical.width = cVertical.parentElement.offsetWidth;
+        cVertical.height = cVertical.parentElement.offsetHeight;
+        cHorizontal.width = cHorizontal.parentElement.offsetWidth;
+        cHorizontal.height = cHorizontal.parentElement.offsetHeight;
+        cTechniques.width = cTechniques.parentElement.offsetWidth;
+        cTechniques.height = cTechniques.parentElement.offsetHeight;
+
+        let verticalPulse = 0;
+        let horizontalNodes = [];
+        
+        // Crear nodos para horizontal (clusters)
+        for(let i=0; i<25; i++) {
+            horizontalNodes.push({
+                x: Math.random() * cHorizontal.width,
+                y: Math.random() * cHorizontal.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                r: Math.random() * 2 + 1
+            });
+        }
+
+        // Partículas para técnicas
+        let dataParticles = [];
+        for(let i=0; i<30; i++) {
+            dataParticles.push({
+                x: Math.random() * cTechniques.width,
+                y: Math.random() * cTechniques.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                r: Math.random() * 1.5 + 0.5,
+                color: Math.random() > 0.5 ? '#4ade80' : '#818cf8'
+            });
+        }
+
+        function loopScalability() {
+            // --- VERTICAL: Ondas concéntricas desde el centro ---
+            ctxV.clearRect(0, 0, cVertical.width, cVertical.height);
+            const centerX = cVertical.width / 2;
+            const centerY = cVertical.height / 2;
+            
+            verticalPulse += 2;
+            if(verticalPulse > 150) verticalPulse = 0;
+
+            for(let i=0; i<3; i++) {
+                const radius = verticalPulse + i * 50;
+                const alpha = Math.max(0, 1 - radius/150);
+                ctxV.beginPath();
+                ctxV.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctxV.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.3})`;
+                ctxV.lineWidth = 2;
+                ctxV.stroke();
+            }
+
+            // --- HORIZONTAL: Red de nodos distribuidos ---
+            ctxH.clearRect(0, 0, cHorizontal.width, cHorizontal.height);
+            
+            // Actualizar posiciones
+            horizontalNodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+                if(node.x < 0 || node.x > cHorizontal.width) node.vx *= -1;
+                if(node.y < 0 || node.y > cHorizontal.height) node.vy *= -1;
+            });
+
+            // Dibujar conexiones
+            ctxH.strokeStyle = 'rgba(56, 189, 248, 0.1)';
+            ctxH.lineWidth = 1;
+            horizontalNodes.forEach((n1, i) => {
+                horizontalNodes.slice(i+1).forEach(n2 => {
+                    const dist = Math.sqrt((n1.x - n2.x)**2 + (n1.y - n2.y)**2);
+                    if(dist < 100) {
+                        ctxH.beginPath();
+                        ctxH.moveTo(n1.x, n1.y);
+                        ctxH.lineTo(n2.x, n2.y);
+                        ctxH.stroke();
+                    }
+                });
+            });
+
+            // Dibujar nodos
+            horizontalNodes.forEach(node => {
+                ctxH.fillStyle = '#38bdf8';
+                ctxH.beginPath();
+                ctxH.arc(node.x, node.y, node.r, 0, Math.PI * 2);
+                ctxH.fill();
+            });
+
+            // --- TÉCNICAS: Flujo de datos (partículas) ---
+            ctxT.clearRect(0, 0, cTechniques.width, cTechniques.height);
+            
+            dataParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if(p.x < 0 || p.x > cTechniques.width) p.vx *= -1;
+                if(p.y < 0 || p.y > cTechniques.height) p.vy *= -1;
+
+                ctxT.fillStyle = p.color;
+                ctxT.globalAlpha = 0.6;
+                ctxT.beginPath();
+                ctxT.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctxT.fill();
+                ctxT.globalAlpha = 1;
+            });
+
+            // Conexiones entre partículas (flujo de datos)
+            ctxT.strokeStyle = 'rgba(129, 140, 248, 0.1)';
+            ctxT.lineWidth = 0.5;
+            for(let i=0; i<dataParticles.length; i++) {
+                for(let j=i+1; j<dataParticles.length; j++) {
+                    const p1 = dataParticles[i];
+                    const p2 = dataParticles[j];
+                    const dist = Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2);
+                    if(dist < 80) {
+                        ctxT.beginPath();
+                        ctxT.moveTo(p1.x, p1.y);
+                        ctxT.lineTo(p2.x, p2.y);
+                        ctxT.stroke();
+                    }
+                }
+            }
+
+            if(document.getElementById('slide-5').classList.contains('active')) {
+                scalabilityAnimId = requestAnimationFrame(loopScalability);
+            }
+        }
+        cancelAnimationFrame(scalabilityAnimId);
+        loopScalability();
+    }
+
+    // --- 8. ANIMACIÓN NORMALIZACIÓN (Slide 7) ---
+    let normalizationAnimId;
+    function startNormalizationAnimation() {
+        const c1nf = document.getElementById('canvas-1nf');
+        const c2nf = document.getElementById('canvas-2nf');
+        const c3nf = document.getElementById('canvas-3nf');
+        
+        if(!c1nf || !c2nf || !c3nf) return;
+
+        const ctx1 = c1nf.getContext('2d');
+        const ctx2 = c2nf.getContext('2d');
+        const ctx3 = c3nf.getContext('2d');
+
+        // Resize
+        c1nf.width = c1nf.parentElement.offsetWidth;
+        c1nf.height = c1nf.parentElement.offsetHeight;
+        c2nf.width = c2nf.parentElement.offsetWidth;
+        c2nf.height = c2nf.parentElement.offsetHeight;
+        c3nf.width = c3nf.parentElement.offsetWidth;
+        c3nf.height = c3nf.parentElement.offsetHeight;
+
+        // 1NF: Partículas que se dividen (atomicidad)
+        let atoms = [];
+        for(let i=0; i<15; i++) {
+            atoms.push({
+                x: Math.random() * c1nf.width,
+                y: Math.random() * c1nf.height,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                r: Math.random() * 3 + 2,
+                splits: Math.floor(Math.random() * 3) + 1 // Cuántas divisiones tiene
+            });
+        }
+
+        // 2NF: Nodos conectados con dependencias
+        let depNodes = [];
+        const numDepNodes = 8;
+        for(let i=0; i<numDepNodes; i++) {
+            depNodes.push({
+                x: Math.random() * c2nf.width,
+                y: Math.random() * c2nf.height,
+                isPrimary: i < 3, // Los primeros 3 son claves primarias
+                connections: []
+            });
+        }
+        // Crear conexiones (dependencias)
+        depNodes.forEach((node, i) => {
+            if(!node.isPrimary) {
+                const primaryNode = depNodes[Math.floor(Math.random() * 3)];
+                node.connections.push(depNodes.indexOf(primaryNode));
+            }
+        });
+
+        // 3NF: Red de flujo que se simplifica
+        let flowParticles = [];
+        for(let i=0; i<20; i++) {
+            flowParticles.push({
+                x: Math.random() * c3nf.width,
+                y: Math.random() * c3nf.height,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                r: Math.random() * 2 + 1,
+                color: '#34d399'
+            });
+        }
+
+        let animFrame = 0;
+
+        function loopNormalization() {
+            animFrame++;
+
+            // --- 1NF: Partículas que se dividen ---
+            ctx1.clearRect(0, 0, c1nf.width, c1nf.height);
+            
+            atoms.forEach(atom => {
+                atom.x += atom.vx;
+                atom.y += atom.vy;
+                if(atom.x < 0 || atom.x > c1nf.width) atom.vx *= -1;
+                if(atom.y < 0 || atom.y > c1nf.height) atom.vy *= -1;
+
+                // Dibujar átomo principal
+                ctx1.fillStyle = '#f87171';
+                ctx1.globalAlpha = 0.6;
+                ctx1.beginPath();
+                ctx1.arc(atom.x, atom.y, atom.r, 0, Math.PI * 2);
+                ctx1.fill();
+
+                // Dibujar divisiones orbitales
+                for(let i=0; i<atom.splits; i++) {
+                    const angle = (animFrame * 0.02) + (i * Math.PI * 2 / atom.splits);
+                    const orbX = atom.x + Math.cos(angle) * (atom.r * 3);
+                    const orbY = atom.y + Math.sin(angle) * (atom.r * 3);
+                    
+                    ctx1.fillStyle = '#fbbf24';
+                    ctx1.beginPath();
+                    ctx1.arc(orbX, orbY, atom.r * 0.5, 0, Math.PI * 2);
+                    ctx1.fill();
+
+                    // Línea conectora
+                    ctx1.strokeStyle = 'rgba(248, 113, 113, 0.2)';
+                    ctx1.lineWidth = 1;
+                    ctx1.beginPath();
+                    ctx1.moveTo(atom.x, atom.y);
+                    ctx1.lineTo(orbX, orbY);
+                    ctx1.stroke();
+                }
+                ctx1.globalAlpha = 1;
+            });
+
+            // --- 2NF: Grafo de dependencias ---
+            ctx2.clearRect(0, 0, c2nf.width, c2nf.height);
+            
+            // Dibujar conexiones primero
+            depNodes.forEach((node, i) => {
+                node.connections.forEach(connIdx => {
+                    const targetNode = depNodes[connIdx];
+                    ctx2.strokeStyle = 'rgba(251, 191, 36, 0.3)';
+                    ctx2.lineWidth = 2;
+                    ctx2.beginPath();
+                    ctx2.moveTo(node.x, node.y);
+                    ctx2.lineTo(targetNode.x, targetNode.y);
+                    ctx2.stroke();
+
+                    // Partícula que fluye por la conexión
+                    const progress = (animFrame * 0.01 + i * 0.1) % 1;
+                    const px = node.x + (targetNode.x - node.x) * progress;
+                    const py = node.y + (targetNode.y - node.y) * progress;
+                    ctx2.fillStyle = '#fbbf24';
+                    ctx2.beginPath();
+                    ctx2.arc(px, py, 2, 0, Math.PI * 2);
+                    ctx2.fill();
+                });
+            });
+
+            // Dibujar nodos
+            depNodes.forEach(node => {
+                ctx2.fillStyle = node.isPrimary ? '#fbbf24' : 'rgba(251, 191, 36, 0.4)';
+                ctx2.beginPath();
+                ctx2.arc(node.x, node.y, node.isPrimary ? 6 : 4, 0, Math.PI * 2);
+                ctx2.fill();
+
+                if(node.isPrimary) {
+                    ctx2.strokeStyle = '#fbbf24';
+                    ctx2.lineWidth = 2;
+                    ctx2.beginPath();
+                    ctx2.arc(node.x, node.y, 10, 0, Math.PI * 2);
+                    ctx2.stroke();
+                }
+            });
+
+            // --- 3NF: Flujo simplificado ---
+            ctx3.clearRect(0, 0, c3nf.width, c3nf.height);
+            
+            flowParticles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if(p.x < 0 || p.x > c3nf.width) p.vx *= -1;
+                if(p.y < 0 || p.y > c3nf.height) p.vy *= -1;
+
+                ctx3.fillStyle = p.color;
+                ctx3.globalAlpha = 0.7;
+                ctx3.beginPath();
+                ctx3.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx3.fill();
+                ctx3.globalAlpha = 1;
+
+                // Trail effect
+                ctx3.strokeStyle = 'rgba(52, 211, 153, 0.1)';
+                ctx3.lineWidth = 1;
+                flowParticles.forEach((p2, j) => {
+                    if(i !== j) {
+                        const dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+                        if(dist < 60) {
+                            ctx3.beginPath();
+                            ctx3.moveTo(p.x, p.y);
+                            ctx3.lineTo(p2.x, p2.y);
+                            ctx3.stroke();
+                        }
+                    }
+                });
+            });
+
+            if(document.getElementById('slide-7').classList.contains('active')) {
+                normalizationAnimId = requestAnimationFrame(loopNormalization);
+            }
+        }
+        cancelAnimationFrame(normalizationAnimId);
+        loopNormalization();
+    }
+
+    // --- 9. ANIMACIÓN BIG DATA Y NUBE (Slide 12) ---
+    let bigDataAnimId;
+    function startBigDataAnimation() {
+        const cColumnar = document.getElementById('canvas-columnar');
+        const cCloud = document.getElementById('canvas-cloud');
+        
+        if(!cColumnar || !cCloud) return;
+
+        const ctxCol = cColumnar.getContext('2d');
+        const ctxCld = cCloud.getContext('2d');
+
+        // Resize
+        cColumnar.width = cColumnar.parentElement.offsetWidth;
+        cColumnar.height = cColumnar.parentElement.offsetHeight;
+        cCloud.width = cCloud.parentElement.offsetWidth;
+        cCloud.height = cCloud.parentElement.offsetHeight;
+
+        // Columnar: Barras verticales que representan columnas
+        let columns = [];
+        const numColumns = 12;
+        for(let i=0; i<numColumns; i++) {
+            columns.push({
+                x: (cColumnar.width / numColumns) * i + (cColumnar.width / numColumns / 2),
+                baseY: cColumnar.height,
+                height: 0,
+                targetHeight: Math.random() * (cColumnar.height * 0.6) + cColumnar.height * 0.2,
+                speed: 2 + Math.random() * 3,
+                color: `hsl(${230 + i * 10}, 70%, 60%)`
+            });
+        }
+
+        // Cloud: Nodos flotantes (servidores en la nube)
+        let cloudNodes = [];
+        for(let i=0; i<8; i++) {
+            cloudNodes.push({
+                x: Math.random() * cCloud.width,
+                y: Math.random() * cCloud.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                r: Math.random() * 4 + 3,
+                type: i % 3 // 0: DB, 1: Backup, 2: Scale
+            });
+        }
+
+        let animFrame = 0;
+
+        function loopBigData() {
+            animFrame++;
+
+            // --- COLUMNAR: Barras que crecen y se comprimen ---
+            ctxCol.clearRect(0, 0, cColumnar.width, cColumnar.height);
+            
+            columns.forEach((col, i) => {
+                // Animación de crecimiento
+                if(col.height < col.targetHeight) {
+                    col.height += col.speed;
+                } else if(col.height > col.targetHeight) {
+                    col.height -= col.speed;
+                }
+
+                // Cambiar objetivo periódicamente
+                if(animFrame % 120 === i * 10) {
+                    col.targetHeight = Math.random() * (cColumnar.height * 0.6) + cColumnar.height * 0.2;
+                }
+
+                // Dibujar barra (columna)
+                const barWidth = (cColumnar.width / numColumns) * 0.7;
+                ctxCol.fillStyle = col.color;
+                ctxCol.globalAlpha = 0.7;
+                ctxCol.fillRect(
+                    col.x - barWidth/2,
+                    col.baseY - col.height,
+                    barWidth,
+                    col.height
+                );
+
+                // Efecto de brillo en la punta
+                const gradient = ctxCol.createLinearGradient(
+                    col.x,
+                    col.baseY - col.height,
+                    col.x,
+                    col.baseY - col.height + 20
+                );
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctxCol.fillStyle = gradient;
+                ctxCol.fillRect(
+                    col.x - barWidth/2,
+                    col.baseY - col.height,
+                    barWidth,
+                    20
+                );
+
+                ctxCol.globalAlpha = 1;
+
+                // Etiqueta de columna
+                ctxCol.fillStyle = '#94a3b8';
+                ctxCol.font = '10px monospace';
+                ctxCol.textAlign = 'center';
+                ctxCol.fillText(`C${i+1}`, col.x, cColumnar.height - 5);
+            });
+
+            // --- CLOUD: Nodos flotantes conectados ---
+            ctxCld.clearRect(0, 0, cCloud.width, cCloud.height);
+            
+            // Actualizar posiciones
+            cloudNodes.forEach(node => {
+                node.x += node.vx;
+                node.y += node.vy;
+                if(node.x < 0 || node.x > cCloud.width) node.vx *= -1;
+                if(node.y < 0 || node.y > cCloud.height) node.vy *= -1;
+            });
+
+            // Dibujar conexiones (red cloud)
+            ctxCld.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+            ctxCld.lineWidth = 1;
+            cloudNodes.forEach((n1, i) => {
+                cloudNodes.slice(i+1).forEach(n2 => {
+                    const dist = Math.sqrt((n1.x - n2.x)**2 + (n1.y - n2.y)**2);
+                    if(dist < 120) {
+                        ctxCld.beginPath();
+                        ctxCld.moveTo(n1.x, n1.y);
+                        ctxCld.lineTo(n2.x, n2.y);
+                        ctxCld.stroke();
+
+                        // Datos fluyendo
+                        if(animFrame % 60 < 30) {
+                            const progress = (animFrame % 30) / 30;
+                            const px = n1.x + (n2.x - n1.x) * progress;
+                            const py = n1.y + (n2.y - n1.y) * progress;
+                            ctxCld.fillStyle = '#38bdf8';
+                            ctxCld.beginPath();
+                            ctxCld.arc(px, py, 2, 0, Math.PI * 2);
+                            ctxCld.fill();
+                        }
+                    }
+                });
+            });
+
+            // Dibujar nodos
+            cloudNodes.forEach(node => {
+                // Colores según tipo
+                let nodeColor;
+                if(node.type === 0) nodeColor = '#4ade80'; // DB
+                else if(node.type === 1) nodeColor = '#818cf8'; // Backup
+                else nodeColor = '#fbbf24'; // Scale
+
+                // Nodo principal
+                ctxCld.fillStyle = nodeColor;
+                ctxCld.globalAlpha = 0.8;
+                ctxCld.beginPath();
+                ctxCld.arc(node.x, node.y, node.r, 0, Math.PI * 2);
+                ctxCld.fill();
+
+                // Anillo exterior (pulso)
+                const pulseRadius = node.r + 3 + Math.sin(animFrame * 0.05 + node.x) * 2;
+                ctxCld.strokeStyle = nodeColor;
+                ctxCld.lineWidth = 1.5;
+                ctxCld.globalAlpha = 0.4;
+                ctxCld.beginPath();
+                ctxCld.arc(node.x, node.y, pulseRadius, 0, Math.PI * 2);
+                ctxCld.stroke();
+
+                ctxCld.globalAlpha = 1;
+            });
+
+            if(document.getElementById('slide-12').classList.contains('active')) {
+                bigDataAnimId = requestAnimationFrame(loopBigData);
+            }
+        }
+        cancelAnimationFrame(bigDataAnimId);
+        loopBigData();
+    }
+
+</script>
+</body>
+</html>
